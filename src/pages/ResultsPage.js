@@ -3,11 +3,12 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import {
     Container, Box, Typography, Button, Grid,
     Card, CardContent, CardActionArea, Chip, Accordion,
-    AccordionSummary, AccordionDetails
+    AccordionSummary, AccordionDetails, Slider, TextField
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SummaryCard from '../components/SummaryCard';
+import { submitFeedback } from '../services/api';
 
 const horizonOptions = [
     { value: 0, label: 'Easy access' },
@@ -33,8 +34,27 @@ const ResultsPage = () => {
     const investments = resultsData?.investments || [];
     const summary = resultsData?.summary || null;
 
+    const [recommendRating, setRecommendRating] = React.useState(5);
+    const [satisfactionRating, setSatisfactionRating] = React.useState(5);
+    const [feedbackText, setFeedbackText] = React.useState('');
+    const [feedbackSubmitted, setFeedbackSubmitted] = React.useState(false);
+
     const handleGoBack = () => {
         navigate('/');
+    };
+
+    const handleFeedbackSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            await submitFeedback({
+                recommend_rating: recommendRating,
+                satisfaction_rating: satisfactionRating,
+                feedback_text: feedbackText,
+            });
+            setFeedbackSubmitted(true);
+        } catch (error) {
+            console.error('Error submitting feedback:', error);
+        }
     };
 
     if (!summary) {
@@ -141,6 +161,70 @@ const ResultsPage = () => {
                         </Grid>
                     ))}
                 </Grid>
+
+                <Box sx={{ my: 4 }}>
+                    {!feedbackSubmitted ? (
+                        <Card variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
+                            <Typography variant="h6" gutterBottom>
+                                We'd love your feedback!
+                            </Typography>
+                            <form onSubmit={handleFeedbackSubmit}>
+                                <Box sx={{ my: 2 }}>
+                                    <Typography gutterBottom>
+                                        How likely are you to recommend this to a friend?
+                                    </Typography>
+                                    <Slider
+                                        value={recommendRating}
+                                        onChange={(e, newValue) => setRecommendRating(newValue)}
+                                        aria-labelledby="recommend-slider"
+                                        valueLabelDisplay="auto"
+                                        step={1}
+                                        marks
+                                        min={1}
+                                        max={10}
+                                    />
+                                </Box>
+                                <Box sx={{ my: 2 }}>
+                                    <Typography gutterBottom>
+                                        How satisfied are you with the generated investment plan?
+                                    </Typography>
+                                    <Slider
+                                        value={satisfactionRating}
+                                        onChange={(e, newValue) => setSatisfactionRating(newValue)}
+                                        aria-labelledby="satisfaction-slider"
+                                        valueLabelDisplay="auto"
+                                        step={1}
+                                        marks
+                                        min={1}
+                                        max={10}
+                                    />
+                                </Box>
+                                <Box sx={{ my: 2 }}>
+                                    <Typography gutterBottom>
+                                        Any other comments or suggestions?
+                                    </Typography>
+                                    <TextField
+                                        value={feedbackText}
+                                        onChange={(e) => setFeedbackText(e.target.value)}
+                                        multiline
+                                        rows={4}
+                                        placeholder="Your feedback..."
+                                        variant="outlined"
+                                        fullWidth
+                                    />
+                                </Box>
+                                <Button type="submit" variant="contained" color="primary">
+                                    Submit Feedback
+                                </Button>
+                            </form>
+                        </Card>
+                    ) : (
+                        <Typography variant="h6" align="center" color="text.secondary">
+                            Thank you for your feedback!
+                        </Typography>
+                    )}
+                </Box>
+
                 <Box sx={{ mt: 4, textAlign: 'center' }}>
                     <Button
                         variant="outlined"
