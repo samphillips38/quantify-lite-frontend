@@ -54,7 +54,7 @@ const ResultsPage = () => {
 
                 <Grid container spacing={4} justifyContent="center">
                     {results.map((item, index) => (
-                        <Grid item xs={12} sm={6} md={4} key={index}>
+                        <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
                             <CardActionArea component="a" href={item.url} target="_blank" rel="noopener noreferrer" sx={{ borderRadius: 2, height: '100%' }}>
                                 <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 2 }}>
                                     <CardContent sx={{ flexGrow: 1 }}>

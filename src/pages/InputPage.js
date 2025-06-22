@@ -25,7 +25,7 @@ const horizonOptions = [
 const InputPage = () => {
     const [earnings, setEarnings] = useState('');
     const [savingsGoals, setSavingsGoals] = useState([{ amount: '', horizon: 0 }]);
-    const [isaAllowance, setIsaAllowance] = useState(20000);
+    const [isaAllowanceUsed, setIsaAllowanceUsed] = useState(0);
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
@@ -57,7 +57,7 @@ const InputPage = () => {
                 amount: parseFloat(goal.amount),
                 horizon: goal.horizon,
             })),
-            isa_allowance_remaining: isaAllowance,
+            isa_allowance_used: isaAllowanceUsed,
         };
 
         try {
@@ -95,13 +95,13 @@ const InputPage = () => {
                     />
 
                     <Typography id="isa-slider-label" gutterBottom sx={{ mt: 4, fontWeight: 'medium' }}>
-                        Remaining ISA Allowance (£{isaAllowance.toLocaleString()})
+                        ISA Allowance Used (£{isaAllowanceUsed.toLocaleString()})
                     </Typography>
                     <Box sx={{ px: 1 }}>
                         <Slider
                             aria-labelledby="isa-slider-label"
-                            value={isaAllowance}
-                            onChange={(e, newValue) => setIsaAllowance(newValue)}
+                            value={isaAllowanceUsed}
+                            onChange={(e, newValue) => setIsaAllowanceUsed(newValue)}
                             valueLabelDisplay="auto"
                             step={500}
                             marks

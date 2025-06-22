@@ -60,7 +60,7 @@ const SummaryCard = ({ results, earnings }) => {
                 </Typography>
                 <Grid container spacing={2} justifyContent="center" sx={{ mt: 1 }}>
                     {summaryItems.map(item => (
-                        <Grid item xs={12} sm={4} key={item.title}>
+                        <Grid size={{ xs: 12, sm: 4 }} key={item.title}>
                             <Box sx={{ textAlign: 'center', p: 1 }}>
                                 {item.icon}
                                 <Typography variant="h6" component="h3" sx={{ mt: 1 }}>
