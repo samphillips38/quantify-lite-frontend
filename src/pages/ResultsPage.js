@@ -33,6 +33,7 @@ const ResultsPage = () => {
     const inputs = location.state?.inputs;
     const investments = resultsData?.investments || [];
     const summary = resultsData?.summary || null;
+    const optimizationRecordId = resultsData?.optimization_record_id;
 
     const [recommendRating, setRecommendRating] = React.useState(5);
     const [satisfactionRating, setSatisfactionRating] = React.useState(5);
@@ -47,6 +48,7 @@ const ResultsPage = () => {
         e.preventDefault();
         try {
             await submitFeedback({
+                optimization_record_id: optimizationRecordId,
                 recommend_rating: recommendRating,
                 satisfaction_rating: satisfactionRating,
                 feedback_text: feedbackText,
