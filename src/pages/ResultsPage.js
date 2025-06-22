@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
     Container, Box, Typography, Button, Grid,
     Card, CardContent, CardActionArea, Chip, Accordion,
-    AccordionSummary, AccordionDetails, Slider, TextField
+    AccordionSummary, AccordionDetails, TextField,
+    RadioGroup, FormControlLabel, Radio, FormLabel, FormControl
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -33,12 +34,12 @@ const ResultsPage = () => {
     const inputs = location.state?.inputs;
     const investments = resultsData?.investments || [];
     const summary = resultsData?.summary || null;
-    const optimizationRecordId = resultsData?.optimization_record_id;
 
-    const [recommendRating, setRecommendRating] = React.useState(5);
-    const [satisfactionRating, setSatisfactionRating] = React.useState(5);
-    const [feedbackText, setFeedbackText] = React.useState('');
-    const [feedbackSubmitted, setFeedbackSubmitted] = React.useState(false);
+    const [nps, setNps] = useState('');
+    const [useful, setUseful] = useState('');
+    const [improvements, setImprovements] = useState('');
+    const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+    const [feedbackError, setFeedbackError] = useState('');
 
     const handleGoBack = () => {
         navigate('/');
@@ -46,16 +47,25 @@ const ResultsPage = () => {
 
     const handleFeedbackSubmit = async (e) => {
         e.preventDefault();
+        if (!nps || !useful) {
+            setFeedbackError('Please fill in all required fields.');
+            return;
+        }
+        setFeedbackError('');
+
+        const feedbackData = {
+            optimization_record_id: resultsData.optimization_record_id,
+            nps_score: parseInt(nps, 10),
+            useful: useful,
+            improvements: improvements,
+        };
+
         try {
-            await submitFeedback({
-                optimization_record_id: optimizationRecordId,
-                recommend_rating: recommendRating,
-                satisfaction_rating: satisfactionRating,
-                feedback_text: feedbackText,
-            });
+            await submitFeedback(feedbackData);
             setFeedbackSubmitted(true);
         } catch (error) {
-            console.error('Error submitting feedback:', error);
+            setFeedbackError('There was an error submitting your feedback. Please try again.');
+            console.error(error);
         }
     };
 
@@ -164,68 +174,67 @@ const ResultsPage = () => {
                     ))}
                 </Grid>
 
-                <Box sx={{ my: 4 }}>
-                    {!feedbackSubmitted ? (
-                        <Card variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
+                {!feedbackSubmitted ? (
+                    <Card sx={{ mt: 4, p: 2 }}>
+                        <CardContent>
                             <Typography variant="h6" gutterBottom>
                                 We'd love your feedback!
                             </Typography>
                             <form onSubmit={handleFeedbackSubmit}>
-                                <Box sx={{ my: 2 }}>
-                                    <Typography gutterBottom>
-                                        How likely are you to recommend this to a friend?
+                                <FormControl component="fieldset" margin="normal" required fullWidth>
+                                    <FormLabel component="legend">On a scale of 0-10, how likely are you to recommend us to a friend or colleague?</FormLabel>
+                                    <RadioGroup
+                                        row
+                                        aria-label="nps"
+                                        name="nps"
+                                        value={nps}
+                                        onChange={(e) => setNps(e.target.value)}
+                                    >
+                                        {[...Array(11).keys()].map(i => (
+                                            <FormControlLabel key={i} value={i} control={<Radio />} label={i} />
+                                        ))}
+                                    </RadioGroup>
+                                </FormControl>
+                                <FormControl component="fieldset" margin="normal" required>
+                                    <FormLabel component="legend">Did you find these recommendations useful?</FormLabel>
+                                    <RadioGroup
+                                        row
+                                        aria-label="useful"
+                                        name="useful"
+                                        value={useful}
+                                        onChange={(e) => setUseful(e.target.value)}
+                                    >
+                                        <FormControlLabel value="yes" control={<Radio />} label="Yes" />
+                                        <FormControlLabel value="no" control={<Radio />} label="No" />
+                                    </RadioGroup>
+                                </FormControl>
+                                <TextField
+                                    fullWidth
+                                    margin="normal"
+                                    label="How could we improve the recommendations?"
+                                    multiline
+                                    rows={4}
+                                    value={improvements}
+                                    onChange={(e) => setImprovements(e.target.value)}
+                                />
+                                {feedbackError && (
+                                    <Typography color="error" sx={{ mt: 2 }}>
+                                        {feedbackError}
                                     </Typography>
-                                    <Slider
-                                        value={recommendRating}
-                                        onChange={(e, newValue) => setRecommendRating(newValue)}
-                                        aria-labelledby="recommend-slider"
-                                        valueLabelDisplay="auto"
-                                        step={1}
-                                        marks
-                                        min={1}
-                                        max={10}
-                                    />
+                                )}
+                                <Box sx={{ mt: 2 }}>
+                                    <Button type="submit" variant="contained">
+                                        Submit Feedback
+                                    </Button>
                                 </Box>
-                                <Box sx={{ my: 2 }}>
-                                    <Typography gutterBottom>
-                                        How satisfied are you with the generated investment plan?
-                                    </Typography>
-                                    <Slider
-                                        value={satisfactionRating}
-                                        onChange={(e, newValue) => setSatisfactionRating(newValue)}
-                                        aria-labelledby="satisfaction-slider"
-                                        valueLabelDisplay="auto"
-                                        step={1}
-                                        marks
-                                        min={1}
-                                        max={10}
-                                    />
-                                </Box>
-                                <Box sx={{ my: 2 }}>
-                                    <Typography gutterBottom>
-                                        Any other comments or suggestions?
-                                    </Typography>
-                                    <TextField
-                                        value={feedbackText}
-                                        onChange={(e) => setFeedbackText(e.target.value)}
-                                        multiline
-                                        rows={4}
-                                        placeholder="Your feedback..."
-                                        variant="outlined"
-                                        fullWidth
-                                    />
-                                </Box>
-                                <Button type="submit" variant="contained" color="primary">
-                                    Submit Feedback
-                                </Button>
                             </form>
-                        </Card>
-                    ) : (
-                        <Typography variant="h6" align="center" color="text.secondary">
-                            Thank you for your feedback!
-                        </Typography>
-                    )}
-                </Box>
+                        </CardContent>
+                    </Card>
+                ) : (
+                    <Typography variant="h6" align="center" sx={{ mt: 4 }}>
+                        Thank you for your feedback!
+                    </Typography>
+                )}
 
                 <Box sx={{ mt: 4, textAlign: 'center' }}>
                     <Button

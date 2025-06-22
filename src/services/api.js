@@ -71,14 +71,13 @@ export const optimiseSavings = async (data, useMockData = false) => {
 };
 
 export const submitFeedback = async (feedbackData) => {
-  const apiUrl = `${API_BASE_URL || 'http://localhost:5001'}/api/feedback`;
+  const apiUrl = `${API_BASE_URL || 'http://localhost:5001'}/feedback`;
 
   try {
     const response = await axios.post(apiUrl, feedbackData);
     return response.data;
   } catch (error) {
     console.error(`Error submitting feedback to ${apiUrl}:`, error);
-    // In a real app, you might want to show a user-facing error message here
     throw error;
   }
 }; 
