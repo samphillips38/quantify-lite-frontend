@@ -4,7 +4,7 @@ import { optimiseSavings } from '../services/api';
 import {
     Container, Box, Typography, TextField, Button,
     Select, MenuItem, FormControl, InputLabel, IconButton,
-    Checkbox, FormControlLabel, CircularProgress, Paper
+    CircularProgress, Paper
 } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
