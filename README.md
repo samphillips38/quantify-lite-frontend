@@ -67,3 +67,21 @@ Follow these instructions to get the frontend running on your local machine.
 3.  (Optional) Check the "Use Mock Data" box to test the frontend without a backend connection.
 4.  Click "Optimise Savings" to see the recommended investment plan on the results page.
 5.  On the results page, click any account card to be redirected to the account provider's website.
+
+## Version Control
+
+This project is managed using Git and is hosted on GitHub.
+
+### Cloning the Repository
+To get a local copy of the project, clone the repository using the following command:
+```bash
+git clone https://github.com/samphillips38/quantify-lite-frontend.git
+cd quantify-lite-frontend
+```
+
+### Contribution Workflow
+If you wish to contribute, please follow this basic workflow:
+1.  Create a new branch for your feature or bug fix: `git checkout -b feature/your-feature-name`
+2.  Make your changes and commit them with a clear message: `git commit -m "Add some feature"`
+3.  Push your branch to the repository: `git push origin feature/your-feature-name`
+4.  Open a pull request on GitHub.
