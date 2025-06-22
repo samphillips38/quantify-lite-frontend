@@ -4,21 +4,33 @@ import { optimiseSavings } from '../services/api';
 import {
     Container, Box, Typography, TextField, Button,
     Select, MenuItem, FormControl, InputLabel, IconButton,
-    CircularProgress, Paper
+    CircularProgress, Paper, Slider
 } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 
 const MOCK_DATA_ENABLED = false; // Set to false to use live data
 
+const horizonOptions = [
+    { value: 0, label: 'Easy access' },
+    { value: 1, label: '1 month' },
+    { value: 3, label: '3 months' },
+    { value: 6, label: '6 months' },
+    { value: 12, label: '1 year' },
+    { value: 24, label: '2 years' },
+    { value: 36, label: '3 years' },
+    { value: 60, label: '5 years' }
+];
+
 const InputPage = () => {
     const [earnings, setEarnings] = useState('');
-    const [savingsGoals, setSavingsGoals] = useState([{ amount: '', horizon: 'Easy access' }]);
+    const [savingsGoals, setSavingsGoals] = useState([{ amount: '', horizon: 0 }]);
+    const [isaAllowance, setIsaAllowance] = useState(20000);
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleAddGoal = () => {
-        setSavingsGoals([...savingsGoals, { amount: '', horizon: 'Easy access' }]);
+        setSavingsGoals([...savingsGoals, { amount: '', horizon: 0 }]);
     };
 
     const handleGoalChange = (index, event) => {
@@ -45,6 +57,7 @@ const InputPage = () => {
                 amount: parseFloat(goal.amount),
                 horizon: goal.horizon,
             })),
+            isa_allowance_remaining: isaAllowance,
         };
 
         try {
@@ -56,10 +69,6 @@ const InputPage = () => {
             setLoading(false);
         }
     };
-
-    const horizonOptions = [
-        'Easy access', '1 month', '3 months', '6 months', '1 year', '2 years', '3 years', '5 years'
-    ];
 
     return (
         <Container maxWidth="md">
@@ -84,6 +93,22 @@ const InputPage = () => {
                         variant="outlined"
                         margin="normal"
                     />
+
+                    <Typography id="isa-slider-label" gutterBottom sx={{ mt: 4, fontWeight: 'medium' }}>
+                        Remaining ISA Allowance (£{isaAllowance.toLocaleString()})
+                    </Typography>
+                    <Box sx={{ px: 1 }}>
+                        <Slider
+                            aria-labelledby="isa-slider-label"
+                            value={isaAllowance}
+                            onChange={(e, newValue) => setIsaAllowance(newValue)}
+                            valueLabelDisplay="auto"
+                            step={500}
+                            marks
+                            min={0}
+                            max={20000}
+                        />
+                    </Box>
 
                     <Typography variant="h5" component="h2" sx={{ mt: 4, mb: 2 }}>
                         Savings Goals
@@ -111,7 +136,7 @@ const InputPage = () => {
                                         label="Time Horizon"
                                     >
                                         {horizonOptions.map(option => (
-                                            <MenuItem key={option} value={option}>{option}</MenuItem>
+                                            <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
                                         ))}
                                     </Select>
                                 </FormControl>
