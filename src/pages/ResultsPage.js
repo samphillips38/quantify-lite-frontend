@@ -62,10 +62,17 @@ const ResultsPage = () => {
                                             <Typography gutterBottom variant="h5" component="h2" sx={{ pr: 1 }}>
                                                 {item.account_name}
                                             </Typography>
-                                            <Chip
-                                                label={item.is_isa ? 'ISA' : 'Standard'}
-                                                size="small"
-                                            />
+                                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
+                                                <Chip
+                                                    label={item.is_isa ? 'ISA' : 'Standard'}
+                                                    size="small"
+                                                />
+                                                <Chip
+                                                    label={item.platform}
+                                                    size="small"
+                                                    variant="outlined"
+                                                />
+                                            </Box>
                                         </Box>
                                         <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
                                             <strong>Amount to Invest:</strong> £{parseFloat(item.amount).toLocaleString()}
