@@ -35,7 +35,7 @@ const MOCK_DATA = {
       "account_name": "Flexible ISA",
       "amount": 3000.00,
       "aer": 4.80,
-      "term": "Variable",
+      "term": "Easy access",
       "is_isa": true,
       "url": "https://www.example.com/flexible-isa"
     },

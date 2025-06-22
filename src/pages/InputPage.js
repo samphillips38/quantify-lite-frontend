@@ -12,12 +12,12 @@ import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 const InputPage = () => {
     const [earnings, setEarnings] = useState('');
     const [useMockData, setUseMockData] = useState(true);
-    const [savingsGoals, setSavingsGoals] = useState([{ amount: '', horizon: 'Variable access' }]);
+    const [savingsGoals, setSavingsGoals] = useState([{ amount: '', horizon: 'Easy access' }]);
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleAddGoal = () => {
-        setSavingsGoals([...savingsGoals, { amount: '', horizon: 'Variable access' }]);
+        setSavingsGoals([...savingsGoals, { amount: '', horizon: 'Easy access' }]);
     };
 
     const handleGoalChange = (index, event) => {
@@ -57,7 +57,7 @@ const InputPage = () => {
     };
 
     const horizonOptions = [
-        'Variable access', '1 month', '3 months', '6 months', '1 year', '2 years', '3 years', '5 years'
+        'Easy access', '1 month', '3 months', '6 months', '1 year', '2 years', '3 years', '5 years'
     ];
 
     return (
