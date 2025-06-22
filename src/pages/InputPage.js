@@ -9,9 +9,10 @@ import {
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 
+const MOCK_DATA_ENABLED = false; // Set to false to use live data
+
 const InputPage = () => {
     const [earnings, setEarnings] = useState('');
-    const [useMockData, setUseMockData] = useState(true);
     const [savingsGoals, setSavingsGoals] = useState([{ amount: '', horizon: 'Easy access' }]);
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
@@ -47,7 +48,7 @@ const InputPage = () => {
         };
 
         try {
-            const result = await optimiseSavings(data, useMockData);
+            const result = await optimiseSavings(data, MOCK_DATA_ENABLED);
             navigate('/results', { state: { results: result.data, earnings: earnings } });
         } catch (error) {
             console.error("Optimisation failed", error);
@@ -131,19 +132,6 @@ const InputPage = () => {
                     >
                         Add Another Savings Goal
                     </Button>
-
-                    <Box sx={{ mt: 2, textAlign: 'left' }}>
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={useMockData}
-                                    onChange={(e) => setUseMockData(e.target.checked)}
-                                    color="primary"
-                                />
-                            }
-                            label="Use Mock Data"
-                        />
-                    </Box>
 
                     <Box sx={{ mt: 3, position: 'relative' }}>
                         <Button
