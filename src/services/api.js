@@ -1,6 +1,17 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+// This is the public URL of your backend.
+// It is set at build time by Railway from the REACT_APP_API_URL environment variable.
+const API_BASE_URL = process.env.REACT_APP_API_URL;
+
+// In a production build, this variable MUST be set.
+// If it's not, the app will not be able to connect to the backend.
+if (process.env.NODE_ENV === 'production' && !API_BASE_URL) {
+  console.error('FATAL: The REACT_APP_API_URL environment variable is not set.');
+  alert('Configuration error: The application is not connected to the backend. Please contact support.');
+  // Throwing an error will stop the app from rendering incorrectly.
+  throw new Error('REACT_APP_API_URL is not set for production build.');
+}
 
 const MOCK_DATA = {
   "investments": [
@@ -38,12 +49,14 @@ export const optimiseSavings = async (data, useMockData = false) => {
     return Promise.resolve({ data: MOCK_DATA });
   }
 
+  // Use the production API URL or fallback to a local URL for development.
+  const apiUrl = `${API_BASE_URL || 'http://localhost:5001'}/optimize`;
+
   try {
-    const response = await axios.post(`${API_URL}/optimize`, data);
+    const response = await axios.post(apiUrl, data);
     return response;
   } catch (error) {
-    console.error("Error calling optimisation endpoint:", error);
-    // Return mock data as a fallback on error
+    console.error(`Error calling optimisation endpoint at ${apiUrl}:`, error);
     alert("Could not connect to the backend. Using mock data for demonstration.");
     return Promise.resolve({ data: MOCK_DATA });
   }
