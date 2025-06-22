@@ -62,7 +62,7 @@ const InputPage = () => {
 
         try {
             const result = await optimiseSavings(data, MOCK_DATA_ENABLED);
-            navigate('/results', { state: { results: result.data, earnings: earnings } });
+            navigate('/results', { state: { results: result.data, inputs: data } });
         } catch (error) {
             console.error("Optimisation failed", error);
         } finally {
