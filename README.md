@@ -54,7 +54,7 @@ Follow these instructions to get the frontend running on your local machine.
 
 1.  To start the development server, run:
     ```sh
-    npm start
+    npm run dev
     ```
     This will open the application in your default web browser at [http://localhost:3000](http://localhost:3000).
 
