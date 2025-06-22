@@ -10,14 +10,15 @@ import SummaryCard from '../components/SummaryCard';
 const ResultsPage = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const results = location.state?.results?.investments || [];
-    const earnings = location.state?.earnings || 0;
+    const resultsData = location.state?.results;
+    const investments = resultsData?.investments || [];
+    const summary = resultsData?.summary || null;
 
     const handleGoBack = () => {
         navigate('/');
     };
 
-    if (results.length === 0) {
+    if (!summary) {
         return (
             <Container maxWidth="md">
                 <Box sx={{ my: 4, textAlign: 'center' }}>
@@ -50,10 +51,10 @@ const ResultsPage = () => {
                     Here is your personalised investment plan. Click on an account to learn more.
                 </Typography>
 
-                <SummaryCard results={results} earnings={earnings} />
+                <SummaryCard summary={summary} />
 
                 <Grid container spacing={4} justifyContent="center">
-                    {results.map((item, index) => (
+                    {investments.map((item, index) => (
                         <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
                             <CardActionArea component="a" href={item.url} target="_blank" rel="noopener noreferrer" sx={{ borderRadius: 2, height: '100%' }}>
                                 <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 2 }}>
