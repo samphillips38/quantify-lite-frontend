@@ -2,15 +2,23 @@ import axios from 'axios';
 
 // This is the public URL of your backend.
 // It is set at build time by Railway from the REACT_APP_API_URL environment variable.
-const API_BASE_URL = process.env.REACT_APP_API_URL;
+let API_BASE_URL = process.env.REACT_APP_API_URL;
 
 // In a production build, this variable MUST be set.
 // If it's not, the app will not be able to connect to the backend.
-if (process.env.NODE_ENV === 'production' && !API_BASE_URL) {
-  console.error('FATAL: The REACT_APP_API_URL environment variable is not set.');
-  alert('Configuration error: The application is not connected to the backend. Please contact support.');
-  // Throwing an error will stop the app from rendering incorrectly.
-  throw new Error('REACT_APP_API_URL is not set for production build.');
+if (process.env.NODE_ENV === 'production') {
+  if (!API_BASE_URL) {
+    console.error('FATAL: The REACT_APP_API_URL environment variable is not set.');
+    alert('Configuration error: The application is not connected to the backend. Please contact support.');
+    // Throwing an error will stop the app from rendering incorrectly.
+    throw new Error('REACT_APP_API_URL is not set for production build.');
+  }
+
+  // Ensure the URL has a protocol. If not, default to https.
+  // This prevents the browser from treating it as a relative path.
+  if (!API_BASE_URL.startsWith('http')) {
+    API_BASE_URL = `https://${API_BASE_URL}`;
+  }
 }
 
 const MOCK_DATA = {
