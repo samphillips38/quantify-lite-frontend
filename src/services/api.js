@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = '/optimize'; // Backend endpoint
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
 
 const MOCK_DATA = {
   "investments": [
@@ -39,7 +39,7 @@ export const optimiseSavings = async (data, useMockData = false) => {
   }
 
   try {
-    const response = await axios.post(API_URL, data);
+    const response = await axios.post(`${API_URL}/optimize`, data);
     return response;
   } catch (error) {
     console.error("Error calling optimisation endpoint:", error);
