@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { optimiseSavings } from '../services/api';
 import {
     Container, Box, Typography, TextField, Button,
@@ -24,19 +24,113 @@ const horizonOptions = [
 
 const InputPage = () => {
     const [earnings, setEarnings] = useState('');
-    const [savingsGoals, setSavingsGoals] = useState([{ amount: '', horizon: 0 }]);
+    const [displayEarnings, setDisplayEarnings] = useState('');
+    const [totalSavings, setTotalSavings] = useState('');
+    const [displayTotalSavings, setDisplayTotalSavings] = useState('');
+    const [savingsGoals, setSavingsGoals] = useState([{ amount: '', displayAmount: '', horizon: 0 }]);
     const [isaAllowanceUsed, setIsaAllowanceUsed] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [isSimpleView, setIsSimpleView] = useState(true);
     const navigate = useNavigate();
+    const location = useLocation();
+
+    const formatCurrency = (rawValue) => {
+        if (!rawValue && rawValue !== 0) return '';
+        return new Intl.NumberFormat('en-GB', {
+            style: 'currency',
+            currency: 'GBP',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        }).format(Number(rawValue));
+    };
+
+    useEffect(() => {
+        if (location.state?.inputs) {
+            const { inputs, isSimpleAnalysis } = location.state;
+
+            const rawEarnings = inputs.earnings.toString();
+            setEarnings(rawEarnings);
+            setDisplayEarnings(formatCurrency(rawEarnings));
+
+            setIsaAllowanceUsed(inputs.isa_allowance_used || 0);
+            setIsSimpleView(isSimpleAnalysis);
+
+            if (isSimpleAnalysis) {
+                const rawTotalSavings = inputs.savings_goals[0]?.amount.toString() || '';
+                setTotalSavings(rawTotalSavings);
+                setDisplayTotalSavings(formatCurrency(rawTotalSavings));
+                setSavingsGoals([{ amount: '', displayAmount: '', horizon: 0 }]);
+            } else {
+                const restoredGoals = inputs.savings_goals.map(goal => {
+                    const rawAmount = goal.amount.toString();
+                    return {
+                        amount: rawAmount,
+                        displayAmount: formatCurrency(rawAmount),
+                        horizon: goal.horizon
+                    };
+                });
+                setSavingsGoals(restoredGoals.length > 0 ? restoredGoals : [{ amount: '', displayAmount: '', horizon: 0 }]);
+                setTotalSavings('');
+                setDisplayTotalSavings('');
+            }
+        }
+    }, [location.state]);
+
+    const handleEarningsChange = (e) => {
+        const rawValue = e.target.value.replace(/[^0-9]/g, '');
+        setEarnings(rawValue);
+
+        if (rawValue) {
+            const formattedValue = new Intl.NumberFormat('en-GB', {
+                style: 'currency',
+                currency: 'GBP',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+            }).format(Number(rawValue));
+            setDisplayEarnings(formattedValue);
+        } else {
+            setDisplayEarnings('');
+        }
+    };
+
+    const handleTotalSavingsChange = (e) => {
+        const rawValue = e.target.value.replace(/[^0-9]/g, '');
+        setTotalSavings(rawValue);
+
+        if (rawValue) {
+            const formattedValue = new Intl.NumberFormat('en-GB', {
+                style: 'currency',
+                currency: 'GBP',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+            }).format(Number(rawValue));
+            setDisplayTotalSavings(formattedValue);
+        } else {
+            setDisplayTotalSavings('');
+        }
+    };
 
     const handleAddGoal = () => {
-        setSavingsGoals([...savingsGoals, { amount: '', horizon: 0 }]);
+        setSavingsGoals([...savingsGoals, { amount: '', displayAmount: '', horizon: 0 }]);
     };
 
     const handleGoalChange = (index, event) => {
+        const { name, value } = event.target;
         const newGoals = savingsGoals.map((goal, i) => {
             if (i === index) {
-                return { ...goal, [event.target.name]: event.target.value };
+                if (name === 'amount') {
+                    const rawValue = value.replace(/[^0-9]/g, '');
+                    const formattedValue = rawValue
+                        ? new Intl.NumberFormat('en-GB', {
+                            style: 'currency',
+                            currency: 'GBP',
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0,
+                        }).format(Number(rawValue))
+                        : '';
+                    return { ...goal, amount: rawValue, displayAmount: formattedValue };
+                }
+                return { ...goal, [name]: value };
             }
             return goal;
         });
@@ -51,22 +145,59 @@ const InputPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        const data = {
-            earnings: parseFloat(earnings),
-            savings_goals: savingsGoals.map(goal => ({
-                amount: parseFloat(goal.amount),
-                horizon: goal.horizon,
-            })),
-            isa_allowance_used: isaAllowanceUsed,
-        };
 
-        try {
-            const result = await optimiseSavings(data, MOCK_DATA_ENABLED);
-            navigate('/results', { state: { results: result.data, inputs: data } });
-        } catch (error) {
-            console.error("Optimisation failed", error);
-        } finally {
-            setLoading(false);
+        if (isSimpleView) {
+            const horizonsToTest = [0, 6, 12, 36, 60];
+            const promises = horizonsToTest.map(horizon => {
+                const data = {
+                    earnings: parseFloat(earnings),
+                    savings_goals: [{
+                        amount: parseFloat(totalSavings),
+                        horizon: horizon,
+                    }],
+                    isa_allowance_used: 0,
+                };
+                return optimiseSavings(data, MOCK_DATA_ENABLED).then(result => ({ data: result.data, inputs: data }));
+            });
+
+            try {
+                const results = await Promise.all(promises);
+                const bestResult = results.reduce((best, current) => {
+                    const currentInterest = current.data.summary?.net_annual_interest || 0;
+                    const bestInterest = best.data.summary?.net_annual_interest || 0;
+                    return currentInterest > bestInterest ? current : best;
+                });
+                navigate('/results', {
+                    state: {
+                        results: bestResult.data,
+                        inputs: bestResult.inputs,
+                        allResults: results,
+                        isSimpleAnalysis: true
+                    }
+                });
+            } catch (error) {
+                console.error("Optimisation failed", error);
+            } finally {
+                setLoading(false);
+            }
+        } else {
+            const data = {
+                earnings: parseFloat(earnings),
+                savings_goals: savingsGoals.map(goal => ({
+                    amount: parseFloat(goal.amount),
+                    horizon: goal.horizon,
+                })),
+                isa_allowance_used: isaAllowanceUsed,
+            };
+
+            try {
+                const result = await optimiseSavings(data, MOCK_DATA_ENABLED);
+                navigate('/results', { state: { results: result.data, inputs: data, isSimpleAnalysis: false } });
+            } catch (error) {
+                console.error("Optimisation failed", error);
+            } finally {
+                setLoading(false);
+            }
         }
     };
 
@@ -84,79 +215,107 @@ const InputPage = () => {
                 <form onSubmit={handleSubmit}>
                     <TextField
                         fullWidth
-                        label="Annual Earnings (£)"
-                        type="number"
-                        value={earnings}
-                        onChange={(e) => setEarnings(e.target.value)}
-                        placeholder="e.g., 50000"
+                        label="Annual Earnings"
+                        value={displayEarnings}
+                        onChange={handleEarningsChange}
+                        placeholder="e.g., £50,000"
                         required
                         variant="outlined"
                         margin="normal"
+                        inputProps={{ inputMode: 'numeric' }}
                     />
 
-                    <Typography id="isa-slider-label" gutterBottom sx={{ mt: 4, fontWeight: 'medium' }}>
-                        ISA Allowance Used (£{isaAllowanceUsed.toLocaleString()})
-                    </Typography>
-                    <Box sx={{ px: 1 }}>
-                        <Slider
-                            aria-labelledby="isa-slider-label"
-                            value={isaAllowanceUsed}
-                            onChange={(e, newValue) => setIsaAllowanceUsed(newValue)}
-                            valueLabelDisplay="auto"
-                            step={500}
-                            marks
-                            min={0}
-                            max={20000}
-                        />
-                    </Box>
-
-                    <Typography variant="h5" component="h2" sx={{ mt: 4, mb: 2 }}>
-                        Savings Goals
-                    </Typography>
-
-                    {savingsGoals.map((goal, index) => (
-                        <Paper key={index} variant="outlined" sx={{ p: 2, mb: 2, position: 'relative', borderRadius: 2 }}>
-                            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, alignItems: 'center' }}>
-                                <TextField
-                                    label="Amount to Save (£)"
-                                    type="number"
-                                    name="amount"
-                                    value={goal.amount}
-                                    onChange={(e) => handleGoalChange(index, e)}
-                                    placeholder="e.g., 10000"
-                                    required
-                                    sx={{ flexGrow: 1, width: '100%' }}
+                    {isSimpleView ? null : (
+                        <>
+                            <Typography id="isa-slider-label" gutterBottom sx={{ mt: 4, fontWeight: 'medium' }}>
+                                ISA Allowance Used (£{isaAllowanceUsed.toLocaleString()})
+                            </Typography>
+                            <Box sx={{ px: 1 }}>
+                                <Slider
+                                    aria-labelledby="isa-slider-label"
+                                    value={isaAllowanceUsed}
+                                    onChange={(e, newValue) => setIsaAllowanceUsed(newValue)}
+                                    valueLabelDisplay="auto"
+                                    step={500}
+                                    marks
+                                    min={0}
+                                    max={20000}
                                 />
-                                <FormControl sx={{ minWidth: {sm: 180}, width: '100%' }}>
-                                    <InputLabel>Time Horizon</InputLabel>
-                                    <Select
-                                        name="horizon"
-                                        value={goal.horizon}
-                                        onChange={(e) => handleGoalChange(index, e)}
-                                        label="Time Horizon"
-                                    >
-                                        {horizonOptions.map(option => (
-                                            <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-                                {savingsGoals.length > 1 && (
-                                    <IconButton onClick={() => handleRemoveGoal(index)} color="secondary" sx={{ position: { xs: 'absolute', sm: 'static' }, top: 16, right: 8}}>
-                                        <RemoveCircleOutlineIcon />
-                                    </IconButton>
-                                )}
                             </Box>
-                        </Paper>
-                    ))}
+                        </>
+                    )}
 
-                    <Button
-                        type="button"
-                        onClick={handleAddGoal}
-                        startIcon={<AddCircleOutlineIcon />}
-                        sx={{ mt: 1 }}
-                    >
-                        Add Another Savings Goal
-                    </Button>
+                    {isSimpleView ? (
+                        <>
+                            <TextField
+                                fullWidth
+                                label="Total Savings Amount"
+                                value={displayTotalSavings}
+                                onChange={handleTotalSavingsChange}
+                                placeholder="e.g., £25,000"
+                                required
+                                variant="outlined"
+                                margin="normal"
+                                inputProps={{ inputMode: 'numeric' }}
+                            />
+                            <Button onClick={() => setIsSimpleView(false)} sx={{ mt: 1 }}>
+                                Specify Specific Savings Goals
+                            </Button>
+                        </>
+                    ) : (
+                        <>
+                            <Typography variant="h5" component="h2" sx={{ mt: 4, mb: 2 }}>
+                                Savings Goals
+                            </Typography>
+
+                            {savingsGoals.map((goal, index) => (
+                                <Paper key={index} variant="outlined" sx={{ p: 2, mb: 2, position: 'relative', borderRadius: 2 }}>
+                                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, alignItems: 'center' }}>
+                                        <TextField
+                                            label="Amount to Save"
+                                            name="amount"
+                                            value={goal.displayAmount}
+                                            onChange={(e) => handleGoalChange(index, e)}
+                                            placeholder="e.g., £10,000"
+                                            required
+                                            sx={{ flexGrow: 1, width: '100%' }}
+                                            inputProps={{ inputMode: 'numeric' }}
+                                        />
+                                        <FormControl sx={{ minWidth: {sm: 180}, width: '100%' }}>
+                                            <InputLabel>Time Horizon</InputLabel>
+                                            <Select
+                                                name="horizon"
+                                                value={goal.horizon}
+                                                onChange={(e) => handleGoalChange(index, e)}
+                                                label="Time Horizon"
+                                            >
+                                                {horizonOptions.map(option => (
+                                                    <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                        {savingsGoals.length > 1 && (
+                                            <IconButton onClick={() => handleRemoveGoal(index)} color="secondary" sx={{ position: { xs: 'absolute', sm: 'static' }, top: 16, right: 8}}>
+                                                <RemoveCircleOutlineIcon />
+                                            </IconButton>
+                                        )}
+                                    </Box>
+                                </Paper>
+                            ))}
+
+                            <Button
+                                type="button"
+                                onClick={handleAddGoal}
+                                startIcon={<AddCircleOutlineIcon />}
+                                sx={{ mt: 1 }}
+                            >
+                                Add Another Savings Goal
+                            </Button>
+                            <Button onClick={() => setIsSimpleView(true)} sx={{ mt: 1, ml: 2 }}>
+                                Use Total Savings Amount
+                            </Button>
+                        </>
+                    )}
 
                     <Box sx={{ mt: 3, position: 'relative' }}>
                         <Button

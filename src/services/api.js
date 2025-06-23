@@ -58,7 +58,7 @@ export const optimiseSavings = async (data, useMockData = false) => {
   }
 
   // Use the production API URL or fallback to a local URL for development.
-  const apiUrl = `${API_BASE_URL || 'http://localhost:5001'}/optimize`;
+  const apiUrl = `${API_BASE_URL || 'http://192.168.0.24:5001'}/optimize`;
 
   try {
     const response = await axios.post(apiUrl, data);
@@ -71,7 +71,7 @@ export const optimiseSavings = async (data, useMockData = false) => {
 };
 
 export const submitFeedback = async (feedbackData) => {
-  const apiUrl = `${API_BASE_URL || 'http://localhost:5001'}/feedback`;
+  const apiUrl = `${API_BASE_URL || 'http://192.168.0.24:5001'}/feedback`;
 
   try {
     const response = await axios.post(apiUrl, feedbackData);

@@ -4,12 +4,15 @@ import {
     Container, Box, Typography, Button, Grid,
     Card, CardContent, CardActionArea, Chip, Accordion,
     AccordionSummary, AccordionDetails, TextField,
-    RadioGroup, FormControlLabel, Radio, FormLabel, FormControl
+    RadioGroup, FormControlLabel, Radio, FormLabel, FormControl, Paper
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SummaryCard from '../components/SummaryCard';
 import { submitFeedback } from '../services/api';
+import {
+    BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell, LabelList
+} from 'recharts';
 
 const horizonOptions = [
     { value: 0, label: 'Easy access' },
@@ -27,13 +30,63 @@ const getHorizonLabel = (value) => {
     return option ? option.label : 'N/A';
 };
 
+const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+        const data = payload[0].payload;
+        return (
+            <Paper elevation={3} sx={{ p: 1.5, backgroundColor: 'rgba(30, 30, 30, 0.95)', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: 2 }}>
+                <Box>
+                    {data.investments.length > 0 ? data.investments.map((inv, index) => (
+                        <Typography key={index} variant="body2" sx={{ color: '#e0e0e0', lineHeight: 1.6 }}>
+                            {new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(inv.amount)} @ {inv.aer}% {inv.is_isa ? '(ISA)' : ''}
+                        </Typography>
+                    )) : (
+                        <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#e0e0e0' }}>
+                            No specific investments.
+                        </Typography>
+                    )}
+                </Box>
+            </Paper>
+        );
+    }
+    return null;
+};
+
 const ResultsPage = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const resultsData = location.state?.results;
     const inputs = location.state?.inputs;
+    const allResults = location.state?.allResults;
+    const isSimpleAnalysis = location.state?.isSimpleAnalysis;
     const investments = resultsData?.investments || [];
     const summary = resultsData?.summary || null;
+
+    const chartData = (isSimpleAnalysis && allResults)
+        ? allResults.map(r => ({
+            name: getHorizonLabel(r.inputs.savings_goals[0].horizon),
+            "Net Annual Interest": r.data.summary?.net_annual_interest || 0,
+            investments: r.data.investments || [],
+        }))
+        : [];
+
+    const interestValues = chartData.map(d => d["Net Annual Interest"]);
+    const minInterest = Math.min(...interestValues);
+    const maxInterest = Math.max(...interestValues);
+
+    const yAxisDomain = (() => {
+        if (interestValues.length === 0) {
+            return [0, 'auto'];
+        }
+        const range = maxInterest - minInterest;
+        if (range === 0) {
+            if (maxInterest === 0) return [0, 100];
+            return [Math.floor(maxInterest * 0.8), Math.ceil(maxInterest * 1.2)];
+        }
+        const lowerBound = minInterest - (range * 0.2);
+        const upperBound = maxInterest + (range * 0.2);
+        return [Math.floor(lowerBound > 0 ? lowerBound : 0), Math.ceil(upperBound)];
+    })();
 
     const [nps, setNps] = useState('');
     const [useful, setUseful] = useState('');
@@ -42,7 +95,7 @@ const ResultsPage = () => {
     const [feedbackError, setFeedbackError] = useState('');
 
     const handleGoBack = () => {
-        navigate('/');
+        navigate('/', { state: { inputs: inputs, isSimpleAnalysis: isSimpleAnalysis } });
     };
 
     const handleFeedbackSubmit = async (e) => {
@@ -64,7 +117,7 @@ const ResultsPage = () => {
             await submitFeedback(feedbackData);
             setFeedbackSubmitted(true);
         } catch (error) {
-            setFeedbackError('There was an error submitting your feedback. Please try again.');
+            setFeedbackError(`There was an error submitting your feedback. Please try again. \n${error.message}`);
             console.error(error);
         }
     };
@@ -129,6 +182,55 @@ const ResultsPage = () => {
                                         </Typography>
                                     ))}
                                 </Box>
+                            </Box>
+                        </AccordionDetails>
+                    </Accordion>
+                )}
+
+                {isSimpleAnalysis && allResults && (
+                    <Accordion defaultExpanded sx={{ mb: 4, borderRadius: 2, '&.Mui-expanded:before': { opacity: 1 } }}>
+                        <AccordionSummary
+                            expandIcon={<ExpandMoreIcon />}
+                            aria-controls="panel2a-content"
+                            id="panel2a-header"
+                        >
+                            <Typography variant="h6">Net Annual Interest by Time Horizon</Typography>
+                        </AccordionSummary>
+                        <AccordionDetails sx={{ display: 'flex', justifyContent: 'center' }}>
+                            <Box sx={{ width: '100%', height: 300 }}>
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart
+                                        data={chartData}
+                                        margin={{ top: 0, right: 0, left: 20, bottom: 0 }}
+                                    >
+                                        <XAxis 
+                                            dataKey="name" 
+                                            tick={{ fill: 'white', fontSize: 12 }}
+                                            angle={-45}
+                                            textAnchor="end"
+                                            interval={0}
+                                            height={60}
+                                        />
+                                        <YAxis
+                                            domain={yAxisDomain}
+                                            tick={false}
+                                            axisLine={false}
+                                            width={0}
+                                        />
+                                        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}/>
+                                        <Bar dataKey="Net Annual Interest" fill="#8884d8">
+                                            <LabelList
+                                                dataKey="Net Annual Interest"
+                                                position="top"
+                                                style={{ fill: 'white', fontSize: 12 }}
+                                                formatter={(value) => `£${Math.round(value).toLocaleString()}`}
+                                            />
+                                            {chartData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry["Net Annual Interest"] === maxInterest ? '#82ca9d' : '#8884d8'} />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
                             </Box>
                         </AccordionDetails>
                     </Accordion>
@@ -218,7 +320,7 @@ const ResultsPage = () => {
                                     onChange={(e) => setImprovements(e.target.value)}
                                 />
                                 {feedbackError && (
-                                    <Typography color="error" sx={{ mt: 2 }}>
+                                    <Typography color="error" sx={{ mt: 2, whiteSpace: 'pre-wrap' }}>
                                         {feedbackError}
                                     </Typography>
                                 )}
