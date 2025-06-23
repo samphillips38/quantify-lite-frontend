@@ -153,7 +153,7 @@ const ResultsPage = () => {
                 <Typography variant="h4" component="h2" align="left" sx={{ mb: 2, mt: 8 }}>
                     Using these <span style={{ color: '#82ca9d' }}>inputs</span>...
                 </Typography>
-                <InputsCard inputs={inputs} />
+                <InputsCard inputs={inputs} isSimpleAnalysis={isSimpleAnalysis} />
 
                 <Typography variant="h4" component="h2" align="left" sx={{ mb: 2, mt: 8 }}>
                     You can get these <span style={{ color: '#82ca9d' }}>post-tax returns</span>...

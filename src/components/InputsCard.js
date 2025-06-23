@@ -5,6 +5,9 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined';
 import MonetizationOnOutlinedIcon from '@mui/icons-material/MonetizationOnOutlined';
 import SavingsOutlinedIcon from '@mui/icons-material/SavingsOutlined';
+import { useNavigate } from 'react-router-dom';
+import Button from '@mui/material/Button';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 const getHorizonLabel = (value) => {
     const horizonOptions = [
@@ -21,7 +24,8 @@ const getHorizonLabel = (value) => {
     return option ? option.label : 'N/A';
 };
 
-const InputsCard = ({ inputs }) => {
+const InputsCard = ({ inputs, isSimpleAnalysis }) => {
+    const navigate = useNavigate();
     if (!inputs) {
         return null;
     }
@@ -85,6 +89,25 @@ const InputsCard = ({ inputs }) => {
                     ))}
                 </Grid>
             </CardContent>
+            <Box sx={{ p: 0, borderTop: 1, borderColor: 'divider', textAlign: 'center' }}>
+                <Button
+                    onClick={() => navigate('/', { state: { inputs, isSimpleAnalysis } })}
+                    fullWidth
+                    disableElevation
+                    variant="text"
+                    sx={{
+                        borderRadius: 0,
+                        fontWeight: 'bold',
+                        fontSize: '1.1rem',
+                        color: 'text.primary',
+                        py: 1.5,
+                        textTransform: 'none',
+                    }}
+                    startIcon={<ArrowBackIcon />}
+                >
+                    Edit your inputs
+                </Button>
+            </Box>
         </Card>
     );
 };
