@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Card, CardContent, Typography, Box, Tooltip, Button, Collapse, CircularProgress, CardActions } from '@mui/material';
+import { Card, CardContent, Typography, Box, Tooltip, Button, Collapse, CircularProgress, CardActions, IconButton } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined';
@@ -237,6 +237,13 @@ const SummaryCard = ({ summary, inputs, investments }) => {
                             </Box>
                         )}
                     </Box>
+                    <Button
+                        onClick={handleExplainClick}
+                        fullWidth
+                        sx={{ mt: 2, py: 1 }}
+                    >
+                        <ExpandLessIcon />
+                    </Button>
                 </Box>
             </Collapse>
         </Card>
