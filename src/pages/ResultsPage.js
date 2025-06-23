@@ -91,6 +91,7 @@ const ResultsPage = () => {
             nps_score: parseInt(nps, 10),
             useful: useful,
             improvements: improvements,
+            age: age,
         };
 
         try {
