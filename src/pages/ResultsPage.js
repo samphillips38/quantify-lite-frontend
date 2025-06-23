@@ -2,14 +2,13 @@ import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
     Container, Box, Typography, Button,
-    Card, CardContent, CardActionArea, Chip, Accordion,
-    AccordionSummary, AccordionDetails, TextField,
+    Card, CardContent, CardActionArea, Chip, TextField,
     RadioGroup, FormControlLabel, Radio, FormLabel, FormControl, Paper
 } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SummaryCard from '../components/SummaryCard';
+import InputsCard from '../components/InputsCard';
 import { submitFeedback } from '../services/api';
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelList
@@ -218,38 +217,7 @@ const ResultsPage = () => {
                     </Box>
                 )}
 
-                {inputs && (
-                    <Accordion sx={{ mb: 4, borderRadius: 2, '&.Mui-expanded:before': { opacity: 1 } }}>
-                        <AccordionSummary
-                            expandIcon={<ExpandMoreIcon />}
-                            aria-controls="panel1a-content"
-                            id="panel1a-header"
-                        >
-                            <Typography variant="h6">Optimisation Inputs</Typography>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                <Typography variant="body1">
-                                    <strong>Annual Earnings:</strong> £{inputs.earnings.toLocaleString()}
-                                </Typography>
-                                <Typography variant="body1">
-                                    <strong>ISA Allowance Used:</strong> £{inputs.isa_allowance_used.toLocaleString()}
-                                </Typography>
-                                <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                                    <strong>Savings Goals:</strong>
-                                </Typography>
-                                <Box sx={{ pl: 2 }}>
-                                    {inputs.savings_goals.map((goal, index) => (
-                                        <Typography key={index} variant="body1">
-                                            - £{goal.amount.toLocaleString()} for {getHorizonLabel(goal.horizon)}
-                                        </Typography>
-                                    ))}
-                                </Box>
-                            </Box>
-                        </AccordionDetails>
-                    </Accordion>
-                )}
-
+                <InputsCard inputs={inputs} />
                 <SummaryCard summary={summary} inputs={inputs} investments={investments} />
 
                 <Grid container spacing={4}>
