@@ -72,6 +72,7 @@ const ResultsPage = () => {
     const [improvements, setImprovements] = useState('');
     const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
     const [feedbackError, setFeedbackError] = useState('');
+    const [age, setAge] = useState('');
 
     const handleGoBack = () => {
         navigate('/', { state: { inputs: inputs, isSimpleAnalysis: isSimpleAnalysis } });
@@ -170,6 +171,8 @@ const ResultsPage = () => {
                     feedbackSubmitted={feedbackSubmitted}
                     feedbackError={feedbackError}
                     handleFeedbackSubmit={handleFeedbackSubmit}
+                    age={age}
+                    setAge={setAge}
                 />
 
                 <Box sx={{ mt: 4, textAlign: 'center' }}>

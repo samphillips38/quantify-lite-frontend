@@ -1,7 +1,15 @@
 import React from 'react';
 import { Box, Typography, Card, CardContent, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio, TextField, Button } from '@mui/material';
 
-const FeedbackSection = ({ nps, setNps, useful, setUseful, improvements, setImprovements, feedbackSubmitted, feedbackError, handleFeedbackSubmit }) => {
+const usefulOptions = [
+    { value: '1', label: 'Not at all' },
+    { value: '2', label: '' },
+    { value: '3', label: 'Somewhat' },
+    { value: '4', label: '' },
+    { value: '5', label: 'Extremely' },
+];
+
+const FeedbackSection = ({ nps, setNps, useful, setUseful, improvements, setImprovements, feedbackSubmitted, feedbackError, handleFeedbackSubmit, age, setAge }) => {
     return (
         !feedbackSubmitted ? (
             <Box>
@@ -11,49 +19,97 @@ const FeedbackSection = ({ nps, setNps, useful, setUseful, improvements, setImpr
                 <Card sx={{ mt: 4, p: 2 }}>
                     <CardContent>
                         <form onSubmit={handleFeedbackSubmit}>
-                            <FormControl component="fieldset" margin="normal" required fullWidth>
-                                <FormLabel component="legend">On a scale of 0-10, how likely are you to recommend us to a friend or colleague?</FormLabel>
-                                <RadioGroup
-                                    row
-                                    aria-label="nps"
-                                    name="nps"
-                                    value={nps}
-                                    onChange={(e) => setNps(e.target.value)}
-                                >
-                                    {[...Array(11).keys()].map(i => (
-                                        <FormControlLabel key={i} value={i} control={<Radio />} label={i} />
-                                    ))}
-                                </RadioGroup>
-                            </FormControl>
-                            <FormControl component="fieldset" margin="normal" required>
-                                <FormLabel component="legend">Did you find these recommendations useful?</FormLabel>
+                            <FormControl component="fieldset" margin="normal" required={false} fullWidth sx={{ mb: 4 }}>
+                                <FormLabel component="legend">How useful did you find these recommendations?</FormLabel>
                                 <RadioGroup
                                     row
                                     aria-label="useful"
                                     name="useful"
                                     value={useful}
                                     onChange={(e) => setUseful(e.target.value)}
+                                    sx={{ justifyContent: 'space-between', width: '100%', display: 'flex', mt: 3 }}
                                 >
-                                    <FormControlLabel value="yes" control={<Radio />} label="Yes" />
-                                    <FormControlLabel value="no" control={<Radio />} label="No" />
+                                    {usefulOptions.map(option => (
+                                        <FormControlLabel
+                                            key={option.value}
+                                            value={option.value}
+                                            control={<Radio />}
+                                            label={<span style={{ fontSize: '0.8rem' }}>{option.label}</span>}
+                                            labelPlacement="bottom"
+                                            sx={{ flex: 1, m: 0, minWidth: 0, textAlign: 'center' }}
+                                        />
+                                    ))}
                                 </RadioGroup>
+                            </FormControl>
+                            <FormControl component="fieldset" margin="normal" required={false} fullWidth sx={{ mb: 4 }}>
+                                <FormLabel component="legend">On a scale of 1-10, how likely are you to recommend us to a friend or colleague?</FormLabel>
+                                <Box sx={{ overflowX: 'auto', width: '100%' }}>
+                                    <RadioGroup
+                                        row
+                                        aria-label="nps"
+                                        name="nps"
+                                        value={nps}
+                                        onChange={(e) => setNps(e.target.value)}
+                                        sx={{ flexWrap: 'nowrap', justifyContent: 'space-between', width: '100%', display: 'flex', mt: 3 }}
+                                    >
+                                        {[...Array(10).keys()].map(i => (
+                                            <FormControlLabel
+                                                key={i}
+                                                value={i + 1}
+                                                control={<Radio />}
+                                                label={<span style={{ fontSize: '0.8rem' }}>{i + 1}</span>}
+                                                labelPlacement="bottom"
+                                                sx={{ flex: 1, m: 0, minWidth: 0, textAlign: 'center' }}
+                                            />
+                                        ))}
+                                    </RadioGroup>
+                                </Box>
                             </FormControl>
                             <TextField
                                 fullWidth
                                 margin="normal"
-                                label="How could we improve the recommendations?"
+                                label="Your age"
+                                type="number"
+                                inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', min: 0, max: 120, step: 1 }}
+                                value={age}
+                                onChange={(e) => setAge(e.target.value)}
+                                sx={{ mb: 4 }}
+                                required
+                            />
+                            <TextField
+                                fullWidth
+                                margin="normal"
+                                label="Any other comments or improvements?"
                                 multiline
                                 rows={4}
                                 value={improvements}
                                 onChange={(e) => setImprovements(e.target.value)}
+                                sx={{ mb: 2 }}
                             />
                             {feedbackError && (
                                 <Typography color="error" sx={{ mt: 2, whiteSpace: 'pre-wrap' }}>
                                     {feedbackError}
                                 </Typography>
                             )}
-                            <Box sx={{ mt: 2 }}>
-                                <Button type="submit" variant="contained">
+                            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+                                <Button
+                                    type="submit"
+                                    variant="contained"
+                                    size="medium"
+                                    fullWidth
+                                    sx={{
+                                        fontWeight: 'bold',
+                                        fontSize: '1.1rem',
+                                        py: 2,
+                                        backgroundColor: 'rgba(202, 178, 234, 0.15)',
+                                        color: '#ffffff',
+                                        boxShadow: 'none',
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(149, 116, 172, 0.25)',
+                                            boxShadow: 'none',
+                                        },
+                                    }}
+                                >
                                     Submit Feedback
                                 </Button>
                             </Box>
