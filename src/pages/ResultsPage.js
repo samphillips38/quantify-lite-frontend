@@ -1,18 +1,15 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-    Container, Box, Typography, Button,
-    Card, CardContent, CardActionArea, Chip, TextField,
-    RadioGroup, FormControlLabel, Radio, FormLabel, FormControl, Paper
+    Container, Box, Typography, Button
 } from '@mui/material';
-import Grid from '@mui/material/Grid';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SummaryCard from '../components/SummaryCard';
 import InputsCard from '../components/InputsCard';
+import SimpleAnalysisSection from '../components/SimpleAnalysisSection';
+import InvestmentsSection from '../components/InvestmentsSection';
+import FeedbackSection from '../components/FeedbackSection';
 import { submitFeedback } from '../services/api';
-import {
-    BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelList
-} from 'recharts';
 import useResizeObserver from 'use-resize-observer';
 
 const horizonOptions = [
@@ -29,28 +26,6 @@ const horizonOptions = [
 const getHorizonLabel = (value) => {
     const option = horizonOptions.find(option => option.value === value);
     return option ? option.label : 'N/A';
-};
-
-const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-        const data = payload[0].payload;
-        return (
-            <Paper elevation={3} sx={{ p: 1.5, backgroundColor: 'rgba(30, 30, 30, 0.95)', border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: 2 }}>
-                <Box>
-                    {data.investments.length > 0 ? data.investments.map((inv, index) => (
-                        <Typography key={index} variant="body2" sx={{ color: '#e0e0e0', lineHeight: 1.6 }}>
-                            {new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(inv.amount)} @ {inv.aer}% {inv.is_isa ? '(ISA)' : ''}
-                        </Typography>
-                    )) : (
-                        <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#e0e0e0' }}>
-                            No specific investments.
-                        </Typography>
-                    )}
-                </Box>
-            </Paper>
-        );
-    }
-    return null;
 };
 
 const ResultsPage = () => {
@@ -159,195 +134,43 @@ const ResultsPage = () => {
                     This is how much money your savings could make for you after tax. It is different depending on how long you lock it away.
                 </Typography>
 
-                {isSimpleAnalysis && allResults && (
-                    <Box sx={{ mb: 4 }}>
-                        <Typography variant="h6" component="h2" align="center" sx={{ mb: 2 }}>
-                            How long should I lock it away for?
-                        </Typography>
-                        <Box ref={ref} sx={{ width: '100%', height: 300 }}>
-                            {width > 0 && height > 0 && (
-                                <ResponsiveContainer width={Math.round(width)} height={Math.round(height)}>
-                                    <BarChart
-                                        data={chartData}
-                                        margin={{ top: 0, right: 0, left: 20, bottom: 1 }}
-                                    >
-                                        <XAxis 
-                                            dataKey="name" 
-                                            tick={{ fill: 'white', fontSize: 12 }}
-                                            angle={-45}
-                                            textAnchor="end"
-                                            interval={0}
-                                            height={60}
-                                        />
-                                        <YAxis
-                                            domain={yAxisDomain}
-                                            tick={false}
-                                            axisLine={false}
-                                            width={0}
-                                        />
-                                        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}/>
-                                        <Bar dataKey="Net Annual Interest" fill="#8884d8">
-                                            <LabelList
-                                                dataKey="Net Annual Interest"
-                                                position="top"
-                                                style={{ fill: 'white', fontSize: 12 }}
-                                                formatter={(value) => `£${Math.round(value).toLocaleString()}`}
-                                            />
-                                            {chartData.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={entry["Net Annual Interest"] === maxInterest ? '#82ca9d' : '#8884d8'} />
-                                            ))}
-                                        </Bar>
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            )}
-                        </Box>
-                        {optimalHorizon && (
-                            <Box sx={{ mt: 8, mb: 5 }}>
-                                <Typography variant="h5" align="center">
-                                    For the best return use
-                                </Typography>
-                                <Typography variant="h1" align="center" sx={{ color: '#82ca9d', fontWeight: 'bold', mb: 3 }}>
-                                    {optimalHorizon.name}
-                                </Typography>
-                                <Typography variant="h5" align="center">
-                                    And invest your <strong>£{inputs.savings_goals[0].amount.toLocaleString()}</strong> as follows:
-                                </Typography>
-                            </Box>
-                        )}
-                    </Box>
-                )}
+                <SimpleAnalysisSection
+                    allResults={allResults}
+                    isSimpleAnalysis={isSimpleAnalysis}
+                    chartData={chartData}
+                    yAxisDomain={yAxisDomain}
+                    maxInterest={maxInterest}
+                    optimalHorizon={optimalHorizon}
+                    inputs={inputs}
+                    ref={ref}
+                    width={width}
+                    height={height}
+                    getHorizonLabel={getHorizonLabel}
+                />
 
-                <Typography variant="h4" component="h2" align="left" sx={{ mb: 2 }}>
-                    With these <span style={{ color: '#82ca9d' }}>inputs</span>...
+                <Typography variant="h4" component="h2" align="left" sx={{ mb: 2, mt: 8 }}>
+                    Using these <span style={{ color: '#82ca9d' }}>inputs</span>...
                 </Typography>
                 <InputsCard inputs={inputs} />
 
-                <Typography variant="h4" component="h2" align="left" sx={{ mb: 2 }}>
+                <Typography variant="h4" component="h2" align="left" sx={{ mb: 2, mt: 8 }}>
                     You can get these <span style={{ color: '#82ca9d' }}>post-tax returns</span>...
                 </Typography>
                 <SummaryCard summary={summary} inputs={inputs} investments={investments} />
 
-                <Typography variant="h4" component="h2" align="left" sx={{ mb: 2 }}>
-                    {investments.length === 1 ? (
-                        <>By saving in this{' '}
-                            <span style={{ color: '#82ca9d', fontWeight: 'bold' }}>account</span>...
-                        </>
-                    ) : (
-                        <>By saving in these{' '}
-                            <span style={{ color: '#82ca9d', fontWeight: 'bold' }}>{investments.length} accounts</span>...
-                        </>
-                    )}
-                </Typography>
-                <Grid container spacing={4}>
-                    {investments.map((item, index) => (
-                        <Grid xs={12} sm={6} md={4} key={index}>
-                            <CardActionArea component="a" href={item.url} target="_blank" rel="noopener noreferrer" sx={{ width: '100%', height: '100%' }}>
-                                <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                                    <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', p: 2.5 }}>
-                                        {/* Card Header */}
-                                        <Box>
-                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <Typography variant="subtitle1" color="text.secondary" sx={{ fontWeight: 'medium' }}>
-                                                    {item.platform}
-                                                </Typography>
-                                                <Chip label={item.is_isa ? 'ISA' : 'Standard'} size="small" variant="outlined" />
-                                            </Box>
-                                            <Typography gutterBottom variant="h5" component="h2" sx={{ fontWeight: 'bold', wordWrap: 'break-word', minHeight: '2.8em', lineHeight: '1.4em', my: 1.5 }}>
-                                                {item.account_name}
-                                            </Typography>
-                                        </Box>
+                <InvestmentsSection investments={investments} />
 
-                                        {/* Financial Details */}
-                                        <Box sx={{ mt: 'auto', pt: 2, borderTop: 1, borderColor: 'divider' }}>
-                                            <Grid container spacing={0.5}>
-                                                <Grid item xs={7}>
-                                                    <Typography variant="body1" color="text.secondary">Amount to Invest:</Typography>
-                                                </Grid>
-                                                <Grid item xs={5} sx={{ textAlign: 'right' }}>
-                                                    <Typography variant="body1" sx={{ fontWeight: 'bold' }}>£{parseFloat(item.amount).toLocaleString()}</Typography>
-                                                </Grid>
-                                                <Grid item xs={7}>
-                                                    <Typography variant="body1" color="text.secondary">AER:</Typography>
-                                                </Grid>
-                                                <Grid item xs={5} sx={{ textAlign: 'right' }}>
-                                                    <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{item.aer}%</Typography>
-                                                </Grid>
-                                                <Grid item xs={7}>
-                                                    <Typography variant="body1" color="text.secondary">Term:</Typography>
-                                                </Grid>
-                                                <Grid item xs={5} sx={{ textAlign: 'right' }}>
-                                                    <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{item.term}</Typography>
-                                                </Grid>
-                                            </Grid>
-                                        </Box>
-                                    </CardContent>
-                                </Card>
-                            </CardActionArea>
-                        </Grid>
-                    ))}
-                </Grid>
-
-                {!feedbackSubmitted ? (
-                    <Card sx={{ mt: 4, p: 2 }}>
-                        <CardContent>
-                            <Typography variant="h6" gutterBottom>
-                                We'd love your feedback!
-                            </Typography>
-                            <form onSubmit={handleFeedbackSubmit}>
-                                <FormControl component="fieldset" margin="normal" required fullWidth>
-                                    <FormLabel component="legend">On a scale of 0-10, how likely are you to recommend us to a friend or colleague?</FormLabel>
-                                    <RadioGroup
-                                        row
-                                        aria-label="nps"
-                                        name="nps"
-                                        value={nps}
-                                        onChange={(e) => setNps(e.target.value)}
-                                    >
-                                        {[...Array(11).keys()].map(i => (
-                                            <FormControlLabel key={i} value={i} control={<Radio />} label={i} />
-                                        ))}
-                                    </RadioGroup>
-                                </FormControl>
-                                <FormControl component="fieldset" margin="normal" required>
-                                    <FormLabel component="legend">Did you find these recommendations useful?</FormLabel>
-                                    <RadioGroup
-                                        row
-                                        aria-label="useful"
-                                        name="useful"
-                                        value={useful}
-                                        onChange={(e) => setUseful(e.target.value)}
-                                    >
-                                        <FormControlLabel value="yes" control={<Radio />} label="Yes" />
-                                        <FormControlLabel value="no" control={<Radio />} label="No" />
-                                    </RadioGroup>
-                                </FormControl>
-                                <TextField
-                                    fullWidth
-                                    margin="normal"
-                                    label="How could we improve the recommendations?"
-                                    multiline
-                                    rows={4}
-                                    value={improvements}
-                                    onChange={(e) => setImprovements(e.target.value)}
-                                />
-                                {feedbackError && (
-                                    <Typography color="error" sx={{ mt: 2, whiteSpace: 'pre-wrap' }}>
-                                        {feedbackError}
-                                    </Typography>
-                                )}
-                                <Box sx={{ mt: 2 }}>
-                                    <Button type="submit" variant="contained">
-                                        Submit Feedback
-                                    </Button>
-                                </Box>
-                            </form>
-                        </CardContent>
-                    </Card>
-                ) : (
-                    <Typography variant="h6" align="center" sx={{ mt: 4 }}>
-                        Thank you for your feedback!
-                    </Typography>
-                )}
+                <FeedbackSection
+                    nps={nps}
+                    setNps={setNps}
+                    useful={useful}
+                    setUseful={setUseful}
+                    improvements={improvements}
+                    setImprovements={setImprovements}
+                    feedbackSubmitted={feedbackSubmitted}
+                    feedbackError={feedbackError}
+                    handleFeedbackSubmit={handleFeedbackSubmit}
+                />
 
                 <Box sx={{ mt: 4, textAlign: 'center' }}>
                     <Button
