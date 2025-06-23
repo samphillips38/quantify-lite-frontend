@@ -35,6 +35,7 @@ const InputPage = () => {
     const [isSimpleView, setIsSimpleView] = useState(true);
     const [anchorEl, setAnchorEl] = useState(null);
     const [savingsAnchorEl, setSavingsAnchorEl] = useState(null);
+    const [showIsaSlider, setShowIsaSlider] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -168,6 +169,16 @@ const InputPage = () => {
         setSavingsGoals(newGoals);
     };
 
+    const handleIsaToggle = () => {
+        setShowIsaSlider((prev) => {
+            const newShow = !prev;
+            if (!newShow) {
+                setIsaAllowanceUsed(0); // Full ISA left if hidden
+            }
+            return newShow;
+        });
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -181,7 +192,7 @@ const InputPage = () => {
                         amount: parseFloat(totalSavings),
                         horizon: horizon,
                     }],
-                    isa_allowance_used: 0,
+                    isa_allowance_used: isaAllowanceUsed,
                 };
                 return optimiseSavings(data, MOCK_DATA_ENABLED).then(result => ({ data: result.data, inputs: data }));
             });
@@ -315,26 +326,6 @@ const InputPage = () => {
                         }}
                     />
 
-                    {isSimpleView ? null : (
-                        <>
-                            <Typography id="isa-slider-label" gutterBottom sx={{ mt: 4, fontWeight: 'medium' }}>
-                                ISA Allowance Used (£{isaAllowanceUsed.toLocaleString()})
-                            </Typography>
-                            <Box sx={{ px: 1 }}>
-                                <Slider
-                                    aria-labelledby="isa-slider-label"
-                                    value={isaAllowanceUsed}
-                                    onChange={(e, newValue) => setIsaAllowanceUsed(newValue)}
-                                    valueLabelDisplay="auto"
-                                    step={500}
-                                    marks
-                                    min={0}
-                                    max={20000}
-                                />
-                            </Box>
-                        </>
-                    )}
-
                     {isSimpleView ? (
                         <>
                             <TextField
@@ -357,16 +348,28 @@ const InputPage = () => {
                                     ),
                                 }}
                             />
-                            <Button onClick={() => setIsSimpleView(false)} sx={{ mt: 1 }}>
-                                Specify Specific Savings Goals
-                            </Button>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1, mb: 2 }}>
+                                <Button
+                                    variant="outlined"
+                                    size="small"
+                                    onClick={() => setIsSimpleView(false)}
+                                >
+                                    Savings Breakdown
+                                </Button>
+                                <Button
+                                    variant="outlined"
+                                    size="small"
+                                    onClick={handleIsaToggle}
+                                >
+                                    {showIsaSlider ? 'Hide ISA Allowance' : 'Edit ISA Allowance'}
+                                </Button>
+                            </Box>
                         </>
                     ) : (
                         <>
                             <Typography variant="h5" component="h2" sx={{ mt: 4, mb: 2 }}>
-                                Savings Goals
+                                Savings Breakdown
                             </Typography>
-
                             {savingsGoals.map((goal, index) => (
                                 <Paper key={index} variant="outlined" sx={{ p: 2, mb: 2, position: 'relative', borderRadius: 2 }}>
                                     <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, alignItems: 'center' }}>
@@ -401,19 +404,52 @@ const InputPage = () => {
                                     </Box>
                                 </Paper>
                             ))}
-
-                            <Button
-                                type="button"
-                                onClick={handleAddGoal}
-                                startIcon={<AddCircleOutlineIcon />}
-                                sx={{ mt: 1 }}
-                            >
-                                Add Another Savings Goal
-                            </Button>
-                            <Button onClick={() => setIsSimpleView(true)} sx={{ mt: 1, ml: 2 }}>
-                                Use Total Savings Amount
-                            </Button>
+                            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                                <Button
+                                    type="button"
+                                    onClick={handleAddGoal}
+                                    startIcon={<AddCircleOutlineIcon />}
+                                >
+                                    Add Another Savings Goal
+                                </Button>
+                            </Box>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1, mb: 2 }}>
+                                <Button
+                                    variant="outlined"
+                                    size="small"
+                                    onClick={() => setIsSimpleView(true)}
+                                >
+                                    Use Total Savings
+                                </Button>
+                                <Button
+                                    variant="outlined"
+                                    size="small"
+                                    onClick={handleIsaToggle}
+                                >
+                                    {showIsaSlider ? 'Hide ISA Allowance' : 'Edit ISA Allowance'}
+                                </Button>
+                            </Box>
                         </>
+                    )}
+
+                    {showIsaSlider && (
+                        <Box sx={{ mt: 3 }}>
+                            <Typography id="isa-slider-label" gutterBottom sx={{ fontWeight: 'medium' }}>
+                                ISA Allowance Used (£{isaAllowanceUsed.toLocaleString()})
+                            </Typography>
+                            <Box sx={{ px: 1 }}>
+                                <Slider
+                                    aria-labelledby="isa-slider-label"
+                                    value={isaAllowanceUsed}
+                                    onChange={(e, newValue) => setIsaAllowanceUsed(newValue)}
+                                    valueLabelDisplay="auto"
+                                    step={500}
+                                    marks
+                                    min={0}
+                                    max={20000}
+                                />
+                            </Box>
+                        </Box>
                     )}
 
                     <Box sx={{ mt: 3, position: 'relative' }}>
@@ -424,6 +460,14 @@ const InputPage = () => {
                             size="large"
                             fullWidth
                             disabled={loading}
+                            sx={{
+                                backgroundColor: 'rgba(255,255,255,0.15)',
+                                color: '#fff',
+                                '&:hover': {
+                                    backgroundColor: 'rgba(255,255,255,0.25)',
+                                },
+                                boxShadow: 'none',
+                            }}
                         >
                             Optimise Savings
                         </Button>
