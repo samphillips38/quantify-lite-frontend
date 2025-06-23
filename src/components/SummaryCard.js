@@ -39,13 +39,13 @@ const SummaryCard = ({ summary, inputs, investments }) => {
     const summaryItems = [
         {
             title: 'Total Savings',
-            value: `£${summary.total_investment.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            value: `£${summary.total_investment.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
             icon: <AccountBalanceWalletOutlinedIcon fontSize="large" color="primary" />,
             tooltip: 'The total amount allocated across all recommended accounts.'
         },
         {
             title: 'Net Annual Interest',
-            value: `£${summary.net_annual_interest.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            value: `£${summary.net_annual_interest.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
             icon: <TrendingUpOutlinedIcon fontSize="large" color="primary" />,
             tooltip: 'The estimated interest earned in one year, after tax is deducted based on your Personal Savings Allowance.'
         },
@@ -168,9 +168,6 @@ const SummaryCard = ({ summary, inputs, investments }) => {
     return (
         <Card sx={{ mb: 4, borderRadius: 3 }}>
             <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-                <Typography variant="h4" gutterBottom align="center">
-                    Post-Tax Summary
-                </Typography>
                 <Grid container spacing={2} justifyContent="center" sx={{ mt: 1 }}>
                     {summaryItems.map(item => (
                         <Grid xs={12} sm={4} key={item.title}>
@@ -187,11 +184,6 @@ const SummaryCard = ({ summary, inputs, investments }) => {
                         </Grid>
                     ))}
                 </Grid>
-                <Box sx={{ textAlign: 'center', mt: 3, pt: 2, borderTop: 1, borderColor: 'rgba(255, 255, 255, 0.2)' }}>
-                     <Typography variant="body1" color="text.secondary">
-                        Your post-tax calculations are based on a <strong>{summary.tax_band}</strong> tax rate and a Personal Savings Allowance of <strong>£{summary.personal_savings_allowance.toLocaleString()}</strong>.
-                    </Typography>
-                </Box>
             </CardContent>
             <CardActions sx={{ p: 0, borderTop: 1, borderColor: 'divider' }}>
                 <Button

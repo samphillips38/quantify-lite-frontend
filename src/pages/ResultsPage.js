@@ -153,7 +153,7 @@ const ResultsPage = () => {
         <Container maxWidth="lg">
             <Box sx={{ my: 4 }}>
                 <Typography variant="h3" component="h1" gutterBottom align="center">
-                    Ca-Ching!
+                    Ka-Ching!
                 </Typography>
                 <Typography variant="h6" color="text.secondary" align="center" sx={{ mb: 4 }}>
                     This is how much money your savings could make for you after tax. It is different depending on how long you lock it away.
@@ -203,13 +203,13 @@ const ResultsPage = () => {
                         </Box>
                         {optimalHorizon && (
                             <Box sx={{ mt: 8, mb: 5 }}>
-                                <Typography variant="h3" align="center" sx={{ mb: 3 }}>
+                                <Typography variant="h5" align="center">
                                     For the best return use
                                 </Typography>
                                 <Typography variant="h1" align="center" sx={{ color: '#82ca9d', fontWeight: 'bold', mb: 3 }}>
                                     {optimalHorizon.name}
                                 </Typography>
-                                <Typography variant="h6" align="center">
+                                <Typography variant="h5" align="center">
                                     And invest your <strong>£{inputs.savings_goals[0].amount.toLocaleString()}</strong> as follows:
                                 </Typography>
                             </Box>
@@ -217,9 +217,27 @@ const ResultsPage = () => {
                     </Box>
                 )}
 
+                <Typography variant="h4" component="h2" align="left" sx={{ mb: 2 }}>
+                    With these <span style={{ color: '#82ca9d' }}>inputs</span>...
+                </Typography>
                 <InputsCard inputs={inputs} />
+
+                <Typography variant="h4" component="h2" align="left" sx={{ mb: 2 }}>
+                    You can get these <span style={{ color: '#82ca9d' }}>post-tax returns</span>...
+                </Typography>
                 <SummaryCard summary={summary} inputs={inputs} investments={investments} />
 
+                <Typography variant="h4" component="h2" align="left" sx={{ mb: 2 }}>
+                    {investments.length === 1 ? (
+                        <>By saving in this{' '}
+                            <span style={{ color: '#82ca9d', fontWeight: 'bold' }}>account</span>...
+                        </>
+                    ) : (
+                        <>By saving in these{' '}
+                            <span style={{ color: '#82ca9d', fontWeight: 'bold' }}>{investments.length} accounts</span>...
+                        </>
+                    )}
+                </Typography>
                 <Grid container spacing={4}>
                     {investments.map((item, index) => (
                         <Grid xs={12} sm={6} md={4} key={index}>

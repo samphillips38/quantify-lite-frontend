@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // This is the public URL of your backend.
 // It is set at build time by Railway from the REACT_APP_API_URL environment variable.
-let API_BASE_URL = process.env.REACT_APP_API_URL;
+let API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
 
 // In a production build, this variable MUST be set.
 // If it's not, the app will not be able to connect to the backend.
@@ -58,7 +58,7 @@ export const optimiseSavings = async (data, useMockData = false) => {
   }
 
   // Use the production API URL or fallback to a local URL for development.
-  const apiUrl = `${API_BASE_URL || 'http://192.168.0.24:5001'}/optimize`;
+  const apiUrl = `${API_BASE_URL}/optimize`;
 
   try {
     const response = await axios.post(apiUrl, data);
@@ -71,7 +71,7 @@ export const optimiseSavings = async (data, useMockData = false) => {
 };
 
 export const submitFeedback = async (feedbackData) => {
-  const apiUrl = `${API_BASE_URL || 'http://192.168.0.24:5001'}/feedback`;
+  const apiUrl = `${API_BASE_URL}/feedback`;
 
   try {
     const response = await axios.post(apiUrl, feedbackData);
