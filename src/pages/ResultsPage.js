@@ -74,6 +74,8 @@ const ResultsPage = () => {
     const minInterest = Math.min(...interestValues);
     const maxInterest = Math.max(...interestValues);
 
+    const optimalHorizon = chartData.find(d => d["Net Annual Interest"] === maxInterest);
+
     const yAxisDomain = (() => {
         if (interestValues.length === 0) {
             return [0, 'auto'];
@@ -149,11 +151,67 @@ const ResultsPage = () => {
         <Container maxWidth="lg">
             <Box sx={{ my: 4 }}>
                 <Typography variant="h3" component="h1" gutterBottom align="center">
-                    Optimisation Results
+                    Ca-Ching!
                 </Typography>
                 <Typography variant="h6" color="text.secondary" align="center" sx={{ mb: 4 }}>
-                    Here is your personalised investment plan. Click on an account to learn more.
+                    This is how much money your savings could make for you after tax. It is different depending on how long you lock it away.
                 </Typography>
+
+                {isSimpleAnalysis && allResults && (
+                    <Box sx={{ mb: 4 }}>
+                        <Typography variant="h6" component="h2" align="center" sx={{ mb: 2 }}>
+                            How long should I lock it away for?
+                        </Typography>
+                        <Box sx={{ width: '100%', height: 300 }}>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart
+                                    data={chartData}
+                                    margin={{ top: 0, right: 0, left: 20, bottom: 0 }}
+                                >
+                                    <XAxis 
+                                        dataKey="name" 
+                                        tick={{ fill: 'white', fontSize: 12 }}
+                                        angle={-45}
+                                        textAnchor="end"
+                                        interval={0}
+                                        height={60}
+                                    />
+                                    <YAxis
+                                        domain={yAxisDomain}
+                                        tick={false}
+                                        axisLine={false}
+                                        width={0}
+                                    />
+                                    <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}/>
+                                    <Bar dataKey="Net Annual Interest" fill="#8884d8">
+                                        <LabelList
+                                            dataKey="Net Annual Interest"
+                                            position="top"
+                                            style={{ fill: 'white', fontSize: 12 }}
+                                            formatter={(value) => `£${Math.round(value).toLocaleString()}`}
+                                        />
+                                        {chartData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry["Net Annual Interest"] === maxInterest ? '#82ca9d' : '#8884d8'} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </Box>
+                        {optimalHorizon && (
+                            <Box sx={{ mt: 8, mb: 5 }}>
+                                <Typography variant="h3" align="center" sx={{ mb: 3 }}>
+                                    For the best return use
+                                </Typography>
+                                <Typography variant="h1" align="center" sx={{ color: '#82ca9d', fontWeight: 'bold', mb: 3 }}>
+                                    {optimalHorizon.name}
+                                </Typography>
+                                <Typography variant="h6" align="center">
+                                    And invest your <strong>£{inputs.savings_goals[0].amount.toLocaleString()}</strong> as follows:
+                                </Typography>
+                            </Box>
+                        )}
+                    </Box>
+                )}
 
                 {inputs && (
                     <Accordion sx={{ mb: 4, borderRadius: 2, '&.Mui-expanded:before': { opacity: 1 } }}>
@@ -182,55 +240,6 @@ const ResultsPage = () => {
                                         </Typography>
                                     ))}
                                 </Box>
-                            </Box>
-                        </AccordionDetails>
-                    </Accordion>
-                )}
-
-                {isSimpleAnalysis && allResults && (
-                    <Accordion defaultExpanded sx={{ mb: 4, borderRadius: 2, '&.Mui-expanded:before': { opacity: 1 } }}>
-                        <AccordionSummary
-                            expandIcon={<ExpandMoreIcon />}
-                            aria-controls="panel2a-content"
-                            id="panel2a-header"
-                        >
-                            <Typography variant="h6">Net Annual Interest by Time Horizon</Typography>
-                        </AccordionSummary>
-                        <AccordionDetails sx={{ display: 'flex', justifyContent: 'center' }}>
-                            <Box sx={{ width: '100%', height: 300 }}>
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart
-                                        data={chartData}
-                                        margin={{ top: 0, right: 0, left: 20, bottom: 0 }}
-                                    >
-                                        <XAxis 
-                                            dataKey="name" 
-                                            tick={{ fill: 'white', fontSize: 12 }}
-                                            angle={-45}
-                                            textAnchor="end"
-                                            interval={0}
-                                            height={60}
-                                        />
-                                        <YAxis
-                                            domain={yAxisDomain}
-                                            tick={false}
-                                            axisLine={false}
-                                            width={0}
-                                        />
-                                        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}/>
-                                        <Bar dataKey="Net Annual Interest" fill="#8884d8">
-                                            <LabelList
-                                                dataKey="Net Annual Interest"
-                                                position="top"
-                                                style={{ fill: 'white', fontSize: 12 }}
-                                                formatter={(value) => `£${Math.round(value).toLocaleString()}`}
-                                            />
-                                            {chartData.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={entry["Net Annual Interest"] === maxInterest ? '#82ca9d' : '#8884d8'} />
-                                            ))}
-                                        </Bar>
-                                    </BarChart>
-                                </ResponsiveContainer>
                             </Box>
                         </AccordionDetails>
                     </Accordion>

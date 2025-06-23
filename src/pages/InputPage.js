@@ -4,10 +4,12 @@ import { optimiseSavings } from '../services/api';
 import {
     Container, Box, Typography, TextField, Button,
     Select, MenuItem, FormControl, InputLabel, IconButton,
-    CircularProgress, Paper, Slider
+    CircularProgress, Paper, Slider, Popover, InputAdornment
 } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
+import InfoIcon from '@mui/icons-material/Info';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 const MOCK_DATA_ENABLED = false; // Set to false to use live data
 
@@ -31,6 +33,8 @@ const InputPage = () => {
     const [isaAllowanceUsed, setIsaAllowanceUsed] = useState(0);
     const [loading, setLoading] = useState(false);
     const [isSimpleView, setIsSimpleView] = useState(true);
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [savingsAnchorEl, setSavingsAnchorEl] = useState(null);
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -43,6 +47,28 @@ const InputPage = () => {
             maximumFractionDigits: 0,
         }).format(Number(rawValue));
     };
+
+    const handleInfoClick = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleInfoClose = () => {
+        setAnchorEl(null);
+    };
+
+    const open = Boolean(anchorEl);
+    const id = open ? 'tax-info-popover' : undefined;
+
+    const handleSavingsInfoClick = (event) => {
+        setSavingsAnchorEl(event.currentTarget);
+    };
+
+    const handleSavingsInfoClose = () => {
+        setSavingsAnchorEl(null);
+    };
+
+    const savingsInfoOpen = Boolean(savingsAnchorEl);
+    const savingsInfoId = savingsInfoOpen ? 'savings-info-popover' : undefined;
 
     useEffect(() => {
         if (location.state?.inputs) {
@@ -205,17 +231,72 @@ const InputPage = () => {
         <Container maxWidth="md">
             <Paper elevation={3} sx={{ my: { xs: 2, sm: 4 }, p: { xs: 2, sm: 4 }, borderRadius: 3 }}>
                 <Box sx={{ textAlign: 'center', mb: 4 }}>
-                    <Typography variant="h3" component="h1" gutterBottom>
-                        Savings Optimiser
+                    <DotLottieReact
+                        src="/animations/ThinkingCharts.lottie"
+                        loop
+                        autoplay
+                        style={{ height: '150px', width: '150px', margin: 'auto', marginBottom: '16px' }}
+                    />
+                    <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
+                        Just Save It.
                     </Typography>
                     <Typography variant="h6" color="text.secondary">
-                        Enter your financial details to get a personalised investment plan.
+                        No time to sort out your savings? Overwhelmed by options? In a tangle over your tax? Intimidated by ISAs?
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
+                        Answer these two questions and get your savings sorted.
                     </Typography>
                 </Box>
                 <form onSubmit={handleSubmit}>
+                    <Popover
+                        id={id}
+                        open={open}
+                        anchorEl={anchorEl}
+                        onClose={handleInfoClose}
+                        anchorOrigin={{
+                            vertical: 'bottom',
+                            horizontal: 'left',
+                        }}
+                    >
+                        <Box sx={{ p: 2, maxWidth: 400, border: '1px solid #ddd', borderRadius: '4px', boxShadow: 3 }}>
+                            <Typography variant="h6" gutterBottom>Don't Worry!</Typography>
+                            <Typography variant="body2" paragraph>
+                                A rough estimate is all we need! You only have to be accurate if you are near:
+                            </Typography>
+                            <Typography variant="body2" paragraph>
+                                <strong>£50,270 (when tax goes from 20% to 40%)</strong>
+                            </Typography>
+                            <Typography variant="body2" paragraph>
+                                <strong>£125,140 (when tax goes from 40% to 45%)</strong>
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
+                                By earnings we mean your total income; salary, bonuses, dividends, etc. before tax.
+                            </Typography>
+                        </Box>
+                    </Popover>
+                    <Popover
+                        id={savingsInfoId}
+                        open={savingsInfoOpen}
+                        anchorEl={savingsAnchorEl}
+                        onClose={handleSavingsInfoClose}
+                        anchorOrigin={{
+                            vertical: 'bottom',
+                            horizontal: 'left',
+                        }}
+                    >
+                        <Box sx={{ p: 2, maxWidth: 400, border: '1px solid #ddd', borderRadius: '4px', boxShadow: 3 }}>
+                            <Typography variant="h6" gutterBottom>About Total Savings</Typography>
+                            <Typography variant="body2">
+                                Please enter the amount you're looking to save. Don't include the money you can't access because its locked away.
+                            </Typography>
+                        </Box>
+                    </Popover>
+                    <Typography variant="h5" sx={{ mt: 4, mb: 2, textAlign: 'center' }}>
+                        Roughly how much...
+                    </Typography>
                     <TextField
                         fullWidth
-                        label="Annual Earnings"
+                        label="...will you earn this tax year?"
                         value={displayEarnings}
                         onChange={handleEarningsChange}
                         placeholder="e.g., £50,000"
@@ -223,6 +304,15 @@ const InputPage = () => {
                         variant="outlined"
                         margin="normal"
                         inputProps={{ inputMode: 'numeric' }}
+                        InputProps={{
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                    <IconButton onClick={handleInfoClick} edge="end">
+                                        <InfoIcon />
+                                    </IconButton>
+                                </InputAdornment>
+                            ),
+                        }}
                     />
 
                     {isSimpleView ? null : (
@@ -249,7 +339,7 @@ const InputPage = () => {
                         <>
                             <TextField
                                 fullWidth
-                                label="Total Savings Amount"
+                                label="...would you like to save?"
                                 value={displayTotalSavings}
                                 onChange={handleTotalSavingsChange}
                                 placeholder="e.g., £25,000"
@@ -257,6 +347,15 @@ const InputPage = () => {
                                 variant="outlined"
                                 margin="normal"
                                 inputProps={{ inputMode: 'numeric' }}
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton onClick={handleSavingsInfoClick} edge="end">
+                                                <InfoIcon />
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                }}
                             />
                             <Button onClick={() => setIsSimpleView(false)} sx={{ mt: 1 }}>
                                 Specify Specific Savings Goals
