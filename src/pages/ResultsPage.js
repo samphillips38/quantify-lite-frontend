@@ -196,8 +196,8 @@ Please structure your response as follows:
 1.  **Start with a positive and encouraging opening.** Acknowledge their goal.
 2.  **Briefly explain what the plan does:** How it allocates their savings to earn interest.
 3.  **Explain *why* this specific plan was chosen for them.** Connect it back to their earnings, ISA allowance, and savings horizon. For example, explain why ISAs were used (or not used), and why certain terms were chosen.
-4.  **Break down the \"Where to Invest\" section.** Explain what each product is in simple terms.
-5.  **Explain the interest and tax.** Clarify what \"net annual interest\" means for them.
+4.  **Break down the "Where to Invest" section.** Explain what each product is in simple terms.
+5.  **Explain the interest and tax.** Clarify what "net annual interest" means for them.
 6.  **End with an encouraging closing statement.**
 
 **Formatting Rules:**
@@ -206,7 +206,7 @@ Please structure your response as follows:
 *   Use **bold** text to highlight key numbers and terms.
 *   Keep paragraphs short and easy to read.
 *   Do not invent any new information. Stick to the data provided.
-*   Do not add a \"Disclaimer\" section.
+*   Do not add a "Disclaimer" section.
 
 Please generate the explanation now.
 `;
