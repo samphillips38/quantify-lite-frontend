@@ -75,21 +75,28 @@ const InputPage = () => {
         if (location.state?.inputs) {
             const { inputs, isSimpleAnalysis } = location.state;
 
-            const rawEarnings = inputs.earnings.toString();
+            // Restore earnings
+            const rawEarnings = inputs.earnings?.toString() || '';
             setEarnings(rawEarnings);
             setDisplayEarnings(formatCurrency(rawEarnings));
 
+            // Restore ISA allowance
             setIsaAllowanceUsed(inputs.isa_allowance_used || 0);
+            setShowIsaSlider(inputs.isa_allowance_used > 0);
+
+            // Restore view mode
             setIsSimpleView(isSimpleAnalysis);
 
             if (isSimpleAnalysis) {
-                const rawTotalSavings = inputs.savings_goals[0]?.amount.toString() || '';
+                // Restore total savings
+                const rawTotalSavings = inputs.savings_goals?.[0]?.amount?.toString() || '';
                 setTotalSavings(rawTotalSavings);
                 setDisplayTotalSavings(formatCurrency(rawTotalSavings));
                 setSavingsGoals([{ amount: '', displayAmount: '', horizon: 0 }]);
             } else {
-                const restoredGoals = inputs.savings_goals.map(goal => {
-                    const rawAmount = goal.amount.toString();
+                // Restore savings goals breakdown
+                const restoredGoals = (inputs.savings_goals || []).map(goal => {
+                    const rawAmount = goal.amount?.toString() || '';
                     return {
                         amount: rawAmount,
                         displayAmount: formatCurrency(rawAmount),
@@ -251,8 +258,8 @@ const InputPage = () => {
                     <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
                         Just Save It.
                     </Typography>
-                    <Typography variant="h6" color="text.secondary">
-                        No time to sort out your savings? Overwhelmed by options? In a tangle over your tax? Intimidated by ISAs?
+                    <Typography variant="h7" color="text.secondary">
+                        No time to sort out your savings? Overwhelmed by your options? In a tangle over your tax? Intimidated by ISAs?
                     </Typography>
                     <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
                         Answer these two questions and get your savings sorted.

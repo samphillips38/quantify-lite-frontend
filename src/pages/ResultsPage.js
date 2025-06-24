@@ -39,6 +39,8 @@ const ResultsPage = () => {
     const investments = resultsData?.investments || [];
     const summary = resultsData?.summary || null;
 
+    const [showIsaSlider] = useState(location.state?.showIsaSlider || false);
+
     const chartData = (isSimpleAnalysis && allResults)
         ? allResults.map(r => ({
             name: getHorizonLabel(r.inputs.savings_goals[0].horizon),
@@ -75,7 +77,7 @@ const ResultsPage = () => {
     const [age, setAge] = useState('');
 
     const handleGoBack = () => {
-        navigate('/', { state: { inputs: inputs, isSimpleAnalysis: isSimpleAnalysis } });
+        navigate('/', { state: { inputs: inputs, isSimpleAnalysis: isSimpleAnalysis, showIsaSlider } });
     };
 
     const handleFeedbackSubmit = async (e) => {
@@ -153,7 +155,7 @@ const ResultsPage = () => {
                 <Typography variant="h4" component="h2" align="left" sx={{ mb: 2, mt: 8 }}>
                     Using these <span style={{ color: '#82ca9d' }}>inputs</span>...
                 </Typography>
-                <InputsCard inputs={inputs} isSimpleAnalysis={isSimpleAnalysis} />
+                <InputsCard inputs={inputs} isSimpleAnalysis={isSimpleAnalysis} showIsaSlider={showIsaSlider} />
 
                 <Typography variant="h4" component="h2" align="left" sx={{ mb: 2, mt: 8 }}>
                     You can get these <span style={{ color: '#82ca9d' }}>post-tax returns</span>...

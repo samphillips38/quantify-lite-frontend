@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Card, CardContent, Typography, Box, Tooltip, Button, Collapse, CircularProgress, CardActions } from '@mui/material';
+import { Card, CardContent, Typography, Box, Button, Collapse, CircularProgress, CardActions, Popover, IconButton } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined';
@@ -31,6 +31,8 @@ const SummaryCard = ({ summary, inputs, investments }) => {
     const [isGenerating, setIsGenerating] = useState(false);
     const [explanationError, setExplanationError] = useState('');
     const explanationCache = useRef({});
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [popoverIndex, setPopoverIndex] = useState(null);
 
     if (!summary) {
         return null;
@@ -56,6 +58,16 @@ const SummaryCard = ({ summary, inputs, investments }) => {
             tooltip: 'The weighted average annual equivalent rate across all investments, after tax.'
         }
     ];
+
+    const handleInfoClick = (event, idx) => {
+        setAnchorEl(event.currentTarget);
+        setPopoverIndex(idx);
+    };
+    const handlePopoverClose = () => {
+        setAnchorEl(null);
+        setPopoverIndex(null);
+    };
+    const open = Boolean(anchorEl);
 
     // Helper to create a stable cache key for the current plan
     const getPlanCacheKey = () => {
@@ -172,15 +184,29 @@ const SummaryCard = ({ summary, inputs, investments }) => {
         <Card sx={{ mb: 4, borderRadius: 3 }}>
             <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
                 <Grid container spacing={2} justifyContent="center" sx={{ mt: 1 }}>
-                    {summaryItems.map(item => (
+                    {summaryItems.map((item, idx) => (
                         <Grid xs={12} sm={4} key={item.title}>
                             <Box sx={{ textAlign: 'center', p: 1 }}>
                                 {item.icon}
-                                <Typography variant="h6" component="h3" sx={{ mt: 1 }}>
+                                <Typography variant="h6" component="h3" sx={{ mt: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     {item.title}
-                                    <Tooltip title={item.tooltip} placement="top" arrow>
-                                        <InfoOutlinedIcon sx={{ fontSize: '1rem', ml: 0.5, verticalAlign: 'middle', color: 'rgba(255, 255, 255, 0.7)' }} />
-                                    </Tooltip>
+                                    <IconButton
+                                        size="small"
+                                        onClick={e => handleInfoClick(e, idx)}
+                                        sx={{ ml: 0.5, p: 0.5 }}
+                                    >
+                                        <InfoOutlinedIcon sx={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.7)' }} />
+                                    </IconButton>
+                                    <Popover
+                                        open={open && popoverIndex === idx}
+                                        anchorEl={anchorEl}
+                                        onClose={handlePopoverClose}
+                                        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                                        transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+                                        PaperProps={{ sx: { p: 2, maxWidth: 250 } }}
+                                    >
+                                        <Typography variant="body2">{item.tooltip}</Typography>
+                                    </Popover>
                                 </Typography>
                                 <Typography variant="h4" color="text.primary">{item.value}</Typography>
                             </Box>

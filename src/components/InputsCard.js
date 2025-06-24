@@ -1,12 +1,11 @@
 import React from 'react';
-import { Card, CardContent, Typography, Box, Tooltip } from '@mui/material';
+import { Card, CardContent, Typography, Box, Button, Popover, IconButton } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined';
 import MonetizationOnOutlinedIcon from '@mui/icons-material/MonetizationOnOutlined';
 import SavingsOutlinedIcon from '@mui/icons-material/SavingsOutlined';
 import { useNavigate } from 'react-router-dom';
-import Button from '@mui/material/Button';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 const getHorizonLabel = (value) => {
@@ -24,8 +23,11 @@ const getHorizonLabel = (value) => {
     return option ? option.label : 'N/A';
 };
 
-const InputsCard = ({ inputs, isSimpleAnalysis }) => {
+const InputsCard = ({ inputs, isSimpleAnalysis, showIsaSlider }) => {
     const navigate = useNavigate();
+    const [anchorEl, setAnchorEl] = React.useState(null);
+    const [popoverIndex, setPopoverIndex] = React.useState(null);
+
     if (!inputs) {
         return null;
     }
@@ -46,39 +48,63 @@ const InputsCard = ({ inputs, isSimpleAnalysis }) => {
             tooltip: 'How much of your £20,000 ISA allowance you have used this tax year.'
         },
         {
-            title: 'Savings Goals',
+            title: 'Savings Breakdown',
             value: savingsGoals.length > 0
                 ? savingsGoals.map((goal, idx) => `£${goal.amount.toLocaleString()} for ${getHorizonLabel(goal.horizon)}`).join('\n')
                 : 'None',
             icon: <SavingsOutlinedIcon fontSize="large" color="primary" />,
-            tooltip: 'Your specific savings goals and how long you plan to save for each.'
+            tooltip: 'Your specific savings breakdown and how long you plan to save for each.'
         }
     ];
+
+    const handleInfoClick = (event, idx) => {
+        setAnchorEl(event.currentTarget);
+        setPopoverIndex(idx);
+    };
+    const handlePopoverClose = () => {
+        setAnchorEl(null);
+        setPopoverIndex(null);
+    };
+    const open = Boolean(anchorEl);
 
     return (
         <Card sx={{ mb: 4, borderRadius: 3 }}>
             <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
                 <Grid container spacing={2} justifyContent="center" sx={{ mt: 1 }}>
-                    {inputItems.map(item => (
+                    {inputItems.map((item, idx) => (
                         <Grid item xs={12} sm={4} key={item.title}>
                             <Box sx={{ textAlign: 'center', p: 1 }}>
                                 {item.icon}
-                                <Typography variant="h6" component="h3" sx={{ mt: 1 }}>
+                                <Typography variant="h6" component="h3" sx={{ mt: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     {item.title}
-                                    <Tooltip title={item.tooltip} placement="top" arrow>
-                                        <InfoOutlinedIcon sx={{ fontSize: '1rem', ml: 0.5, verticalAlign: 'middle', color: 'rgba(255, 255, 255, 0.7)' }} />
-                                    </Tooltip>
+                                    <IconButton
+                                        size="small"
+                                        onClick={e => handleInfoClick(e, idx)}
+                                        sx={{ ml: 0.5, p: 0.5 }}
+                                    >
+                                        <InfoOutlinedIcon sx={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.7)' }} />
+                                    </IconButton>
+                                    <Popover
+                                        open={open && popoverIndex === idx}
+                                        anchorEl={anchorEl}
+                                        onClose={handlePopoverClose}
+                                        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                                        transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+                                        PaperProps={{ sx: { p: 2, maxWidth: 250 } }}
+                                    >
+                                        <Typography variant="body2">{item.tooltip}</Typography>
+                                    </Popover>
                                 </Typography>
-                                {item.title === 'Savings Goals' ? (
+                                {item.title === 'Savings Breakdown' ? (
                                     <Box sx={{ mt: 1 }}>
                                         {savingsGoals.length > 0 ? (
                                             savingsGoals.map((goal, idx) => (
-                                                <Typography key={idx} variant="body1">
+                                                <Typography key={idx} variant="body3">
                                                     £{goal.amount.toLocaleString()} for {getHorizonLabel(goal.horizon)}
                                                 </Typography>
                                             ))
                                         ) : (
-                                            <Typography variant="body1">None</Typography>
+                                            <Typography variant="body3">None</Typography>
                                         )}
                                     </Box>
                                 ) : (
@@ -91,7 +117,7 @@ const InputsCard = ({ inputs, isSimpleAnalysis }) => {
             </CardContent>
             <Box sx={{ p: 0, borderTop: 1, borderColor: 'divider', textAlign: 'center' }}>
                 <Button
-                    onClick={() => navigate('/', { state: { inputs, isSimpleAnalysis } })}
+                    onClick={() => navigate('/', { state: { inputs, isSimpleAnalysis, showIsaSlider } })}
                     fullWidth
                     disableElevation
                     variant="text"
