@@ -99,12 +99,15 @@ const InputsCard = ({ inputs, isSimpleAnalysis, showIsaSlider }) => {
                                     <Box sx={{ mt: 1 }}>
                                         {savingsGoals.length > 0 ? (
                                             savingsGoals.map((goal, idx) => (
-                                                <Typography key={idx} variant="body3">
+                                                <Typography key={idx} 
+                                                    variant={savingsGoals.length === 1 ? 'h4' : 'body2'} 
+                                                    color="text.primary"
+                                                    sx={savingsGoals.length === 1 ? { fontWeight: 'bold' } : { fontSize: '1.25rem' }}>
                                                     £{goal.amount.toLocaleString()} for {getHorizonLabel(goal.horizon)}
                                                 </Typography>
                                             ))
                                         ) : (
-                                            <Typography variant="body3">None</Typography>
+                                            <Typography variant="body2">None</Typography>
                                         )}
                                     </Box>
                                 ) : (

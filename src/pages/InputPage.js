@@ -288,7 +288,7 @@ const InputPage = () => {
                                 <strong>£125,140 (when tax goes from 40% to 45%)</strong>
                             </Typography>
                             <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
-                                By earnings we mean your total income; salary, bonuses, dividends, etc. before tax.
+                                By earnings we mean your total income; salary, bonuses, dividends, rent receipts, etc. before tax.
                             </Typography>
                         </Box>
                     </Popover>
