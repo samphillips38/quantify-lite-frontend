@@ -660,18 +660,9 @@ const InputPage = () => {
                         <Button
                             type="submit"
                             variant="contained"
-                            color="primary"
-                            size="large"
+                            size="medium"
                             fullWidth
-                            disabled={loading || !!earningsError || !!savingsError}
-                            sx={{
-                                backgroundColor: 'rgba(255,255,255,0.15)',
-                                color: '#fff',
-                                '&:hover': {
-                                    backgroundColor: 'rgba(255,255,255,0.25)',
-                                },
-                                boxShadow: 'none',
-                            }}
+                            disabled={loading}
                         >
                             {loading ? 'Optimizing...' : 'Optimise Savings'}
                         </Button>

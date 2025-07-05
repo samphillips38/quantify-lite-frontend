@@ -7,6 +7,7 @@ import MonetizationOnOutlinedIcon from '@mui/icons-material/MonetizationOnOutlin
 import SavingsOutlinedIcon from '@mui/icons-material/SavingsOutlined';
 import { useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { useTheme } from '@mui/material/styles';
 
 const getHorizonLabel = (value) => {
     const horizonOptions = [
@@ -27,6 +28,7 @@ const InputsCard = ({ inputs, isSimpleAnalysis, showIsaSlider }) => {
     const navigate = useNavigate();
     const [anchorEl, setAnchorEl] = React.useState(null);
     const [popoverIndex, setPopoverIndex] = React.useState(null);
+    const theme = useTheme();
 
     if (!inputs) {
         return null;
@@ -82,7 +84,7 @@ const InputsCard = ({ inputs, isSimpleAnalysis, showIsaSlider }) => {
                                         onClick={e => handleInfoClick(e, idx)}
                                         sx={{ ml: 0.5, p: 0.5 }}
                                     >
-                                        <InfoOutlinedIcon sx={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.7)' }} />
+                                        <InfoOutlinedIcon sx={{ fontSize: '1rem', color: theme.palette.text.secondary }} />
                                     </IconButton>
                                     <Popover
                                         open={open && popoverIndex === idx}

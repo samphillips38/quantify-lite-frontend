@@ -97,18 +97,6 @@ const FeedbackSection = ({ nps, setNps, useful, setUseful, improvements, setImpr
                                     variant="contained"
                                     size="medium"
                                     fullWidth
-                                    sx={{
-                                        fontWeight: 'bold',
-                                        fontSize: '1.1rem',
-                                        py: 2,
-                                        backgroundColor: 'rgba(202, 178, 234, 0.15)',
-                                        color: '#ffffff',
-                                        boxShadow: 'none',
-                                        '&:hover': {
-                                            backgroundColor: 'rgba(149, 116, 172, 0.25)',
-                                            boxShadow: 'none',
-                                        },
-                                    }}
                                 >
                                     Submit Feedback
                                 </Button>

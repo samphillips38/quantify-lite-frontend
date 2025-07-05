@@ -5,8 +5,10 @@ import ResultsPage from './pages/ResultsPage';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import GlobalStyles from '@mui/material/GlobalStyles';
-import theme from './theme';
+import { themes } from './theme';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useState, useMemo } from 'react';
+import ThemeSpeedDial from './components/ThemeSpeedDial';
 
 const pageVariants = {
   initial: {
@@ -64,18 +66,27 @@ const AnimatedRoutes = () => {
   )
 }
 
-const backgroundGradient = (
-  <GlobalStyles
-    styles={{
-      body: {
-        background: 'linear-gradient(to bottom, #2c0a4d, #8a4d80)',
-        backgroundAttachment: 'fixed',
-      },
-    }}
-  />
-);
-
 function App() {
+  const [themeName, setThemeName] = useState('Purple Dark');
+  const theme = themes[themeName] || themes['Purple Dark'];
+
+  // Compute background gradient based on theme
+  const backgroundGradient = useMemo(() => {
+    const bgDefault = theme.palette.background?.default || '#2c0a4d';
+    const bgPaper = theme.palette.background?.paper || '#8a4d80';
+    return (
+      <GlobalStyles
+        styles={{
+          body: {
+            background: `linear-gradient(to bottom, ${bgDefault}, ${bgPaper})`,
+            backgroundAttachment: 'fixed',
+            transition: 'background 0.5s',
+          },
+        }}
+      />
+    );
+  }, [theme]);
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -83,6 +94,7 @@ function App() {
       <Router>
         <div className="App">
           <AnimatedRoutes />
+          <ThemeSpeedDial currentTheme={themeName} setTheme={setThemeName} />
         </div>
       </Router>
     </ThemeProvider>

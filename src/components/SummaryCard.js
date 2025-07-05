@@ -9,6 +9,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useTheme } from '@mui/material/styles';
 
 const getHorizonLabel = (value) => {
     const horizonOptions = [
@@ -33,6 +34,7 @@ const SummaryCard = ({ summary, inputs, investments }) => {
     const explanationCache = useRef({});
     const [anchorEl, setAnchorEl] = useState(null);
     const [popoverIndex, setPopoverIndex] = useState(null);
+    const theme = useTheme();
 
     if (!summary) {
         return null;
@@ -116,7 +118,7 @@ const SummaryCard = ({ summary, inputs, investments }) => {
         const annualTax = (summary.gross_annual_interest || 0) - (summary.net_annual_interest || 0);
         console.log("Annual Tax: ", annualTax);
 
-        const prompt = `\nYou are a friendly and helpful financial assistant called Quantify Lite. Your goal is to explain a savings plan to a user in a simple and clear way.\n\nHere is the user's information and the savings plan our system generated:\n\n**User's Financial Snapshot:**\n*   **Annual Earnings:** £${(inputs.earnings || 0).toLocaleString()}\n*   **ISA Allowance Already Used This Year:** £${(inputs.isa_allowance_used || 0).toLocaleString()}\n*   **Savings Goal(s):**\n${savingsGoalsText}\n\n**Recommended Savings Plan:**\n*   **Total Amount to Invest:** £${(summary.total_investment || 0).toLocaleString()}\n*   **Your Estimated Net Annual Interest (after tax):** £${(summary.net_annual_interest || 0).toLocaleString()}\n*   **Gross Annual Interest (before tax):** £${(summary.gross_annual_interest || 0).toLocaleString()}\n*   **Estimated Annual Tax:** £${annualTax.toLocaleString()}\n\n**Where to Invest:**\n${investmentsText}\n\n---\n\n**Your Task:**\nExplain this savings plan to the user. Your tone should be encouraging and easy to understand for someone who may not be a financial expert.\n\nPlease structure your response as follows:\n1.  **Start with a positive and encouraging opening.** Acknowledge their goal.\n2.  **Briefly explain what the plan does:** How it allocates their savings to earn interest.\n3.  **Explain *why* this specific plan was chosen for them.** Connect it back to their earnings, ISA allowance, and savings horizon. For example, explain why ISAs were used (or not used), and why certain terms were chosen.\n4.  **Break down the "Where to Invest" section.** Explain what each product is in simple terms.\n5.  **Explain the interest and tax.** Clarify what "net annual interest" means for them.\n6.  **End with an encouraging closing statement, however do not title this section.**\n\n**Formatting Rules:**\n*   Use Markdown for formatting.\n*   Use headings (e.g., \`### My Plan in a Nutshell\`) and bullet points to keep it organized.\n*   Use **bold** text to highlight key numbers and terms.\n*   Keep paragraphs short and easy to read.\n*   Do not invent any new information. Stick to the data provided.\n*   Do not add a "Disclaimer" section.\n\nPlease generate the explanation now.\n`;
+        const prompt = `\nYou are a friendly and helpful financial assistant called Quantify Lite. Your goal is to explain a savings plan to a user in a simple and clear way.\n\nHere is the user's information and the savings plan our system generated:\n\n**User's Financial Snapshot:**\n*   **Annual Earnings:** £${(inputs.earnings || 0).toLocaleString()}\n*   **ISA Allowance Already Used This Year:** £${(inputs.isa_allowance_used || 0).toLocaleString()}\n*   **Savings Goal(s):**\n${savingsGoalsText}\n\n**Recommended Savings Plan:**\n*   **Total Amount to Invest:** £${(summary.total_investment || 0).toLocaleString()}\n*   **Your Estimated Net Annual Interest (after tax):** £${(summary.net_annual_interest || 0).toLocaleString()}\n*   **Gross Annual Interest (before tax):** £${(summary.gross_annual_interest || 0).toLocaleString()}\n*   **Estimated Annual Tax:** £${annualTax.toLocaleString()}\n\n**Where to Invest:**\n${investmentsText}\n\n---\n\n**Your Task:**\nExplain this savings plan to the user. Your tone should be encouraging and easy to understand for someone who may not be a financial expert.\n\nPlease structure your response as follows:\n1.  **Start with a positive and encouraging opening.** Acknowledge their goal.\n2.  **Briefly explain what the plan does:** How it allocates their savings to earn interest.\n3.  **Explain *why* this specific plan was chosen for them.** Connect it back to their earnings, ISA allowance, and savings horizon. For example, explain why ISAs were used (or not used), and why certain terms were chosen.\n4.  **Break down the "Where to Invest" section.** Explain what each product is in simple terms.\n5.  **Explain the interest and tax.** Clarify what "net annual interest" means for them.\n6.  **End with an encouraging closing statement, however do not title this section.**\n\n**Formatting Rules:**\n*   Use Markdown for formatting.\n*   Use headings (e.g., \`### Your Plan in a Nutshell\`) and bullet points to keep it organized.\n*   Use **bold** text to highlight key numbers and terms.\n*   Keep paragraphs short and easy to read.\n*   Do not invent any new information. Stick to the data provided.\n*   Do not add a "Disclaimer" section.\n\nPlease generate the explanation now.\n`;
 
         try {
             const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -195,7 +197,7 @@ const SummaryCard = ({ summary, inputs, investments }) => {
                                         onClick={e => handleInfoClick(e, idx)}
                                         sx={{ ml: 0.5, p: 0.5 }}
                                     >
-                                        <InfoOutlinedIcon sx={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.7)' }} />
+                                        <InfoOutlinedIcon sx={{ fontSize: '1rem', color: theme.palette.text.secondary }} />
                                     </IconButton>
                                     <Popover
                                         open={open && popoverIndex === idx}
