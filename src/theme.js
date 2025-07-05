@@ -49,6 +49,11 @@ let theme = createTheme({
           borderRadius: 8,
           textTransform: 'none',
           fontWeight: 'bold',
+          padding: '8px 16px',
+          '@media (max-width: 600px)': {
+            padding: '10px 16px',
+            fontSize: '0.9rem',
+          },
         },
       },
     },
@@ -58,7 +63,12 @@ let theme = createTheme({
                 '& .MuiOutlinedInput-root': {
                     borderRadius: 8,
                     backgroundColor: 'rgba(255, 255, 255, 0.05)'
-                }
+                },
+                '@media (max-width: 600px)': {
+                    '& .MuiInputLabel-root': {
+                        fontSize: '0.9rem',
+                    },
+                },
             }
         }
     },
@@ -67,7 +77,46 @@ let theme = createTheme({
             root: {
                 backgroundColor: 'rgba(255, 255, 255, 0.15)',
                 backdropFilter: 'blur(5px)',
+                transition: 'all 0.2s ease',
+                cursor: 'pointer',
+                '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                    transform: 'translateY(-1px)',
+                },
+                '@media (max-width: 600px)': {
+                    fontSize: '0.75rem',
+                    height: '28px',
+                },
             }
+        }
+    },
+    MuiContainer: {
+        styleOverrides: {
+            root: {
+                '@media (max-width: 600px)': {
+                    paddingLeft: '16px',
+                    paddingRight: '16px',
+                },
+            }
+        }
+    },
+    MuiTypography: {
+        styleOverrides: {
+            h3: {
+                '@media (max-width: 600px)': {
+                    fontSize: '1.8rem',
+                },
+            },
+            h4: {
+                '@media (max-width: 600px)': {
+                    fontSize: '1.5rem',
+                },
+            },
+            h5: {
+                '@media (max-width: 600px)': {
+                    fontSize: '1.2rem',
+                },
+            },
         }
     }
   },

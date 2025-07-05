@@ -1,15 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { optimiseSavings } from '../services/api';
 import {
     Container, Box, Typography, TextField, Button,
     Select, MenuItem, FormControl, InputLabel, IconButton,
-    CircularProgress, Paper, Slider, Popover, InputAdornment
+    CircularProgress, Paper, Slider, Popover, InputAdornment,
+    Alert, Chip, Stack
 } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import InfoIcon from '@mui/icons-material/Info';
+import CalculateIcon from '@mui/icons-material/Calculate';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import LoadingOverlay from '../components/LoadingOverlay';
+import FormPersistenceNotification from '../components/FormPersistenceNotification';
 
 const MOCK_DATA_ENABLED = false; // Set to false to use live data
 
@@ -36,8 +40,19 @@ const InputPage = () => {
     const [anchorEl, setAnchorEl] = useState(null);
     const [savingsAnchorEl, setSavingsAnchorEl] = useState(null);
     const [showIsaSlider, setShowIsaSlider] = useState(false);
+    
+    // Form validation and error states
+    const [earningsError, setEarningsError] = useState('');
+    const [savingsError, setSavingsError] = useState('');
+    const [submitError, setSubmitError] = useState('');
+    const [formTouched, setFormTouched] = useState(false);
+    const [showRestoredNotification, setShowRestoredNotification] = useState(false);
+    
     const navigate = useNavigate();
     const location = useLocation();
+
+    // Quick select amounts for savings
+    const quickSelectAmounts = [5000, 10000, 15000, 20000, 25000, 50000];
 
     const formatCurrency = (rawValue) => {
         if (!rawValue && rawValue !== 0) return '';
@@ -47,6 +62,55 @@ const InputPage = () => {
             minimumFractionDigits: 0,
             maximumFractionDigits: 0,
         }).format(Number(rawValue));
+    };
+
+    // Form validation functions
+    const validateEarnings = (value) => {
+        const numValue = parseFloat(value);
+        if (!value) return 'Annual earnings is required';
+        if (isNaN(numValue)) return 'Please enter a valid number';
+        if (numValue < 0) return 'Earnings cannot be negative';
+        if (numValue > 10000000) return 'Please enter a realistic amount';
+        return '';
+    };
+
+    const validateSavings = (value, fieldName = 'savings amount') => {
+        const numValue = parseFloat(value);
+        if (!value) return `${fieldName} is required`;
+        if (isNaN(numValue)) return 'Please enter a valid number';
+        if (numValue < 0) return 'Amount cannot be negative';
+        if (numValue > 1000000) return 'Please enter a realistic amount';
+        return '';
+    };
+
+    // Form persistence
+    const saveFormToStorage = useCallback(() => {
+        const formData = {
+            earnings,
+            totalSavings,
+            savingsGoals,
+            isaAllowanceUsed,
+            isSimpleView,
+            showIsaSlider,
+            timestamp: Date.now()
+        };
+        localStorage.setItem('quantifyLiteForm', JSON.stringify(formData));
+    }, [earnings, totalSavings, savingsGoals, isaAllowanceUsed, isSimpleView, showIsaSlider]);
+
+    const loadFormFromStorage = () => {
+        try {
+            const saved = localStorage.getItem('quantifyLiteForm');
+            if (saved) {
+                const formData = JSON.parse(saved);
+                // Only restore if saved within last 24 hours
+                if (Date.now() - formData.timestamp < 24 * 60 * 60 * 1000) {
+                    return formData;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading form data:', error);
+        }
+        return null;
     };
 
     const handleInfoClick = (event) => {
@@ -107,12 +171,41 @@ const InputPage = () => {
                 setTotalSavings('');
                 setDisplayTotalSavings('');
             }
+        } else {
+            // Try to load saved form data if no state from navigation
+            const savedData = loadFormFromStorage();
+            if (savedData) {
+                setEarnings(savedData.earnings || '');
+                setDisplayEarnings(formatCurrency(savedData.earnings));
+                setTotalSavings(savedData.totalSavings || '');
+                setDisplayTotalSavings(formatCurrency(savedData.totalSavings));
+                setSavingsGoals(savedData.savingsGoals || [{ amount: '', displayAmount: '', horizon: 0 }]);
+                setIsaAllowanceUsed(savedData.isaAllowanceUsed || 0);
+                setIsSimpleView(savedData.isSimpleView ?? true);
+                setShowIsaSlider(savedData.showIsaSlider || false);
+                setShowRestoredNotification(true);
+            }
         }
     }, [location.state]);
+
+    // Auto-save form data when it changes
+    useEffect(() => {
+        if (formTouched) {
+            const timeoutId = setTimeout(() => {
+                saveFormToStorage();
+            }, 1000); // Save 1 second after user stops typing
+            return () => clearTimeout(timeoutId);
+        }
+    }, [earnings, totalSavings, savingsGoals, isaAllowanceUsed, isSimpleView, showIsaSlider, formTouched, saveFormToStorage]);
 
     const handleEarningsChange = (e) => {
         const rawValue = e.target.value.replace(/[^0-9]/g, '');
         setEarnings(rawValue);
+        setFormTouched(true);
+
+        // Validate and set error
+        const error = validateEarnings(rawValue);
+        setEarningsError(error);
 
         if (rawValue) {
             const formattedValue = new Intl.NumberFormat('en-GB', {
@@ -130,6 +223,11 @@ const InputPage = () => {
     const handleTotalSavingsChange = (e) => {
         const rawValue = e.target.value.replace(/[^0-9]/g, '');
         setTotalSavings(rawValue);
+        setFormTouched(true);
+
+        // Validate and set error
+        const error = validateSavings(rawValue, 'total savings amount');
+        setSavingsError(error);
 
         if (rawValue) {
             const formattedValue = new Intl.NumberFormat('en-GB', {
@@ -144,12 +242,29 @@ const InputPage = () => {
         }
     };
 
+    // Quick select handlers
+    const handleQuickSelectEarnings = (amount) => {
+        setEarnings(amount.toString());
+        setDisplayEarnings(formatCurrency(amount));
+        setEarningsError('');
+        setFormTouched(true);
+    };
+
+    const handleQuickSelectSavings = (amount) => {
+        setTotalSavings(amount.toString());
+        setDisplayTotalSavings(formatCurrency(amount));
+        setSavingsError('');
+        setFormTouched(true);
+    };
+
     const handleAddGoal = () => {
         setSavingsGoals([...savingsGoals, { amount: '', displayAmount: '', horizon: 0 }]);
     };
 
     const handleGoalChange = (index, event) => {
         const { name, value } = event.target;
+        setFormTouched(true);
+        
         const newGoals = savingsGoals.map((goal, i) => {
             if (i === index) {
                 if (name === 'amount') {
@@ -188,6 +303,32 @@ const InputPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setSubmitError('');
+        
+        // Validate form before submission
+        const earningsValidation = validateEarnings(earnings);
+        const savingsValidation = isSimpleView 
+            ? validateSavings(totalSavings, 'total savings amount')
+            : '';
+            
+        setEarningsError(earningsValidation);
+        setSavingsError(savingsValidation);
+        
+        // Check savings goals validation in breakdown mode
+        let hasGoalErrors = false;
+        if (!isSimpleView) {
+            const goalErrors = savingsGoals.some(goal => {
+                const error = validateSavings(goal.amount, 'savings goal amount');
+                return error !== '';
+            });
+            hasGoalErrors = goalErrors;
+        }
+        
+        if (earningsValidation || savingsValidation || hasGoalErrors) {
+            setSubmitError('Please fix the errors above before submitting.');
+            return;
+        }
+        
         setLoading(true);
 
         if (isSimpleView) {
@@ -221,6 +362,7 @@ const InputPage = () => {
                 });
             } catch (error) {
                 console.error("Optimisation failed", error);
+                setSubmitError('Failed to optimize your savings. Please check your internet connection and try again.');
             } finally {
                 setLoading(false);
             }
@@ -239,6 +381,7 @@ const InputPage = () => {
                 navigate('/results', { state: { results: result.data, inputs: data, isSimpleAnalysis: false } });
             } catch (error) {
                 console.error("Optimisation failed", error);
+                setSubmitError('Failed to optimize your savings. Please check your internet connection and try again.');
             } finally {
                 setLoading(false);
             }
@@ -265,6 +408,10 @@ const InputPage = () => {
                         Answer these two questions and get your savings sorted.
                     </Typography>
                 </Box>
+                <FormPersistenceNotification 
+                    show={showRestoredNotification}
+                    onClose={() => setShowRestoredNotification(false)}
+                />
                 <form onSubmit={handleSubmit}>
                     <Popover
                         id={id}
@@ -321,6 +468,8 @@ const InputPage = () => {
                         required
                         variant="outlined"
                         margin="normal"
+                        error={!!earningsError}
+                        helperText={earningsError}
                         inputProps={{ inputMode: 'numeric' }}
                         InputProps={{
                             endAdornment: (
@@ -332,6 +481,26 @@ const InputPage = () => {
                             ),
                         }}
                     />
+                    
+                    {/* Quick select buttons for earnings */}
+                    <Box sx={{ mt: 1, mb: 2 }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                            Common amounts:
+                        </Typography>
+                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                            {[25000, 35000, 50000, 75000, 100000, 150000].map((amount) => (
+                                <Chip
+                                    key={amount}
+                                    label={formatCurrency(amount)}
+                                    onClick={() => handleQuickSelectEarnings(amount)}
+                                    variant="outlined"
+                                    size="small"
+                                    icon={<CalculateIcon fontSize="small" />}
+                                    sx={{ mb: 1 }}
+                                />
+                            ))}
+                        </Stack>
+                    </Box>
 
                     {isSimpleView ? (
                         <>
@@ -344,6 +513,8 @@ const InputPage = () => {
                                 required
                                 variant="outlined"
                                 margin="normal"
+                                error={!!savingsError}
+                                helperText={savingsError}
                                 inputProps={{ inputMode: 'numeric' }}
                                 InputProps={{
                                     endAdornment: (
@@ -355,6 +526,26 @@ const InputPage = () => {
                                     ),
                                 }}
                             />
+                            
+                            {/* Quick select buttons for savings */}
+                            <Box sx={{ mt: 1, mb: 2 }}>
+                                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                    Common amounts:
+                                </Typography>
+                                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                                    {quickSelectAmounts.map((amount) => (
+                                        <Chip
+                                            key={amount}
+                                            label={formatCurrency(amount)}
+                                            onClick={() => handleQuickSelectSavings(amount)}
+                                            variant="outlined"
+                                            size="small"
+                                            icon={<CalculateIcon fontSize="small" />}
+                                            sx={{ mb: 1 }}
+                                        />
+                                    ))}
+                                </Stack>
+                            </Box>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1, mb: 2 }}>
                                 <Button
                                     variant="outlined"
@@ -459,6 +650,12 @@ const InputPage = () => {
                         </Box>
                     )}
 
+                    {submitError && (
+                        <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
+                            {submitError}
+                        </Alert>
+                    )}
+
                     <Box sx={{ mt: 3, position: 'relative' }}>
                         <Button
                             type="submit"
@@ -466,7 +663,7 @@ const InputPage = () => {
                             color="primary"
                             size="large"
                             fullWidth
-                            disabled={loading}
+                            disabled={loading || !!earningsError || !!savingsError}
                             sx={{
                                 backgroundColor: 'rgba(255,255,255,0.15)',
                                 color: '#fff',
@@ -476,7 +673,7 @@ const InputPage = () => {
                                 boxShadow: 'none',
                             }}
                         >
-                            Optimise Savings
+                            {loading ? 'Optimizing...' : 'Optimise Savings'}
                         </Button>
                         {loading && (
                             <CircularProgress
@@ -493,6 +690,10 @@ const InputPage = () => {
                     </Box>
                 </form>
             </Paper>
+            <LoadingOverlay 
+                open={loading} 
+                message="Optimizing your savings..."
+            />
         </Container>
     );
 };

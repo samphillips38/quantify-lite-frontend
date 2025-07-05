@@ -9,6 +9,7 @@ import InputsCard from '../components/InputsCard';
 import SimpleAnalysisSection from '../components/SimpleAnalysisSection';
 import InvestmentsSection from '../components/InvestmentsSection';
 import FeedbackSection from '../components/FeedbackSection';
+import ExportPDFButton from '../components/ExportPDFButton';
 import { submitFeedback } from '../services/api';
 import useResizeObserver from 'use-resize-observer';
 
@@ -178,7 +179,7 @@ const ResultsPage = () => {
                     setAge={setAge}
                 />
 
-                <Box sx={{ mt: 4, textAlign: 'center' }}>
+                <Box sx={{ mt: 4, textAlign: 'center', display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
                     <Button
                         variant="outlined"
                         onClick={handleGoBack}
@@ -186,6 +187,11 @@ const ResultsPage = () => {
                     >
                         Go Back
                     </Button>
+                    <ExportPDFButton 
+                        results={resultsData} 
+                        inputs={inputs} 
+                        isSimpleAnalysis={isSimpleAnalysis} 
+                    />
                 </Box>
             </Box>
         </Container>
