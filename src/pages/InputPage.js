@@ -5,13 +5,14 @@ import {
     Container, Box, Typography, TextField, Button,
     Select, MenuItem, FormControl, InputLabel, IconButton,
     CircularProgress, Slider, Popover, InputAdornment,
-    Alert, Collapse
+    Alert, Collapse, Chip, Stack
 } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import InfoIcon from '@mui/icons-material/Info';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import LoadingOverlay from '../components/LoadingOverlay';
 import FormPersistenceNotification from '../components/FormPersistenceNotification';
 
@@ -38,6 +39,7 @@ const InputPage = () => {
     const [loading, setLoading] = useState(false);
     const [isSimpleView, setIsSimpleView] = useState(true);
     const [showAdvanced, setShowAdvanced] = useState(false);
+    const [showIsaSlider, setShowIsaSlider] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
     const [savingsAnchorEl, setSavingsAnchorEl] = useState(null);
     
@@ -50,6 +52,10 @@ const InputPage = () => {
     
     const navigate = useNavigate();
     const location = useLocation();
+
+    // Quick select amounts - fewer options to reduce clutter
+    const quickSelectEarnings = [35000, 50000, 75000, 100000];
+    const quickSelectSavings = [10000, 20000, 30000, 50000];
 
     const formatCurrency = (rawValue) => {
         if (!rawValue && rawValue !== 0) return '';
@@ -89,10 +95,11 @@ const InputPage = () => {
             isaAllowanceUsed,
             isSimpleView,
             showAdvanced,
+            showIsaSlider,
             timestamp: Date.now()
         };
         localStorage.setItem('quantifyLiteForm', JSON.stringify(formData));
-    }, [earnings, totalSavings, savingsGoals, isaAllowanceUsed, isSimpleView, showAdvanced]);
+    }, [earnings, totalSavings, savingsGoals, isaAllowanceUsed, isSimpleView, showAdvanced, showIsaSlider]);
 
     const loadFormFromStorage = () => {
         try {
@@ -132,6 +139,31 @@ const InputPage = () => {
     const savingsInfoOpen = Boolean(savingsAnchorEl);
     const savingsInfoId = savingsInfoOpen ? 'savings-info-popover' : undefined;
 
+    const handleIsaToggle = () => {
+        setShowIsaSlider((prev) => {
+            const newShow = !prev;
+            if (!newShow) {
+                setIsaAllowanceUsed(0); // Reset ISA allowance if hidden
+            }
+            return newShow;
+        });
+    };
+
+    // Quick select handlers
+    const handleQuickSelectEarnings = (amount) => {
+        setEarnings(amount.toString());
+        setDisplayEarnings(formatCurrency(amount));
+        setEarningsError('');
+        setFormTouched(true);
+    };
+
+    const handleQuickSelectSavings = (amount) => {
+        setTotalSavings(amount.toString());
+        setDisplayTotalSavings(formatCurrency(amount));
+        setSavingsError('');
+        setFormTouched(true);
+    };
+
     useEffect(() => {
         if (location.state?.inputs) {
             const { inputs, isSimpleAnalysis } = location.state;
@@ -143,7 +175,7 @@ const InputPage = () => {
 
             // Restore ISA allowance
             setIsaAllowanceUsed(inputs.isa_allowance_used || 0);
-            setShowAdvanced(inputs.isa_allowance_used > 0);
+            setShowIsaSlider(inputs.isa_allowance_used > 0);
 
             // Restore view mode
             setIsSimpleView(isSimpleAnalysis);
@@ -180,6 +212,7 @@ const InputPage = () => {
                 setIsaAllowanceUsed(savedData.isaAllowanceUsed || 0);
                 setIsSimpleView(savedData.isSimpleView ?? true);
                 setShowAdvanced(savedData.showAdvanced || false);
+                setShowIsaSlider(savedData.showIsaSlider || false);
                 setShowRestoredNotification(true);
             }
         }
@@ -193,7 +226,7 @@ const InputPage = () => {
             }, 1000); // Save 1 second after user stops typing
             return () => clearTimeout(timeoutId);
         }
-    }, [earnings, totalSavings, savingsGoals, isaAllowanceUsed, isSimpleView, showAdvanced, formTouched, saveFormToStorage]);
+    }, [earnings, totalSavings, savingsGoals, isaAllowanceUsed, isSimpleView, showAdvanced, showIsaSlider, formTouched, saveFormToStorage]);
 
     const handleEarningsChange = (e) => {
         const rawValue = e.target.value.replace(/[^0-9]/g, '');
@@ -363,6 +396,12 @@ const InputPage = () => {
     return (
         <Container maxWidth="sm" sx={{ py: 3 }}>
             <Box sx={{ mb: 3, textAlign: 'center' }}>
+                <DotLottieReact
+                    src="/animations/ThinkingCharts.lottie"
+                    loop
+                    autoplay
+                    style={{ height: '120px', width: '120px', margin: 'auto', marginBottom: '16px' }}
+                />
                 <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 300, mb: 1 }}>
                     Just Save It
                 </Typography>
@@ -436,6 +475,20 @@ const InputPage = () => {
                             ),
                         }}
                     />
+                    
+                    {/* Quick select for earnings - fewer options */}
+                    <Stack direction="row" spacing={1} sx={{ mt: 1 }} useFlexGap flexWrap>
+                        {quickSelectEarnings.map((amount) => (
+                            <Chip
+                                key={amount}
+                                label={formatCurrency(amount)}
+                                onClick={() => handleQuickSelectEarnings(amount)}
+                                variant="outlined"
+                                size="small"
+                                clickable
+                            />
+                        ))}
+                    </Stack>
                 </Box>
 
                 {isSimpleView ? (
@@ -461,6 +514,20 @@ const InputPage = () => {
                                 ),
                             }}
                         />
+                        
+                        {/* Quick select for savings - fewer options */}
+                        <Stack direction="row" spacing={1} sx={{ mt: 1 }} useFlexGap flexWrap>
+                            {quickSelectSavings.map((amount) => (
+                                <Chip
+                                    key={amount}
+                                    label={formatCurrency(amount)}
+                                    onClick={() => handleQuickSelectSavings(amount)}
+                                    variant="outlined"
+                                    size="small"
+                                    clickable
+                                />
+                            ))}
+                        </Stack>
                     </Box>
                 ) : (
                     <Box sx={{ mb: 3 }}>
@@ -517,44 +584,58 @@ const InputPage = () => {
                     </Box>
                 )}
 
-                <Box sx={{ mb: 3 }}>
+                {/* ISA Selection as separate button */}
+                <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={handleIsaToggle}
+                    >
+                        {showIsaSlider ? 'Hide ISA Allowance' : 'Edit ISA Allowance'}
+                    </Button>
+                    
                     <Button
                         type="button"
                         onClick={() => setShowAdvanced(!showAdvanced)}
                         startIcon={showAdvanced ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                         size="small"
                         variant="text"
-                        sx={{ mb: 2 }}
                     >
-                        Advanced Options
+                        {isSimpleView ? 'Breakdown View' : 'Simple View'}
                     </Button>
-                    
-                    <Collapse in={showAdvanced}>
-                        <Box sx={{ p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
-                            <Button
-                                variant="outlined"
-                                size="small"
-                                onClick={() => setIsSimpleView(!isSimpleView)}
-                                sx={{ mb: 2, mr: 1 }}
-                            >
-                                {isSimpleView ? 'Use Breakdown' : 'Use Simple View'}
-                            </Button>
-                            
-                            <Typography variant="body2" sx={{ mb: 1 }}>
-                                ISA Allowance Used: £{isaAllowanceUsed.toLocaleString()}
-                            </Typography>
-                            <Slider
-                                value={isaAllowanceUsed}
-                                onChange={(e, newValue) => setIsaAllowanceUsed(newValue)}
-                                valueLabelDisplay="auto"
-                                step={1000}
-                                min={0}
-                                max={20000}
-                                size="small"
-                            />
-                        </Box>
-                    </Collapse>
                 </Box>
+
+                {/* ISA Slider */}
+                <Collapse in={showIsaSlider}>
+                    <Box sx={{ mb: 3, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+                        <Typography variant="body2" sx={{ mb: 1 }}>
+                            ISA Allowance Used: £{isaAllowanceUsed.toLocaleString()}
+                        </Typography>
+                        <Slider
+                            value={isaAllowanceUsed}
+                            onChange={(e, newValue) => setIsaAllowanceUsed(newValue)}
+                            valueLabelDisplay="auto"
+                            step={1000}
+                            min={0}
+                            max={20000}
+                            size="small"
+                        />
+                    </Box>
+                </Collapse>
+                
+                {/* Advanced Options */}
+                <Collapse in={showAdvanced}>
+                    <Box sx={{ mb: 3, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+                        <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() => setIsSimpleView(!isSimpleView)}
+                            fullWidth
+                        >
+                            Switch to {isSimpleView ? 'Breakdown View' : 'Simple View'}
+                        </Button>
+                    </Box>
+                </Collapse>
 
                 {submitError && (
                     <Alert severity="error" sx={{ mb: 2 }}>
