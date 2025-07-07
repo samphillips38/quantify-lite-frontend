@@ -4,13 +4,14 @@ import { optimiseSavings } from '../services/api';
 import {
     Container, Box, Typography, TextField, Button,
     Select, MenuItem, FormControl, InputLabel, IconButton,
-    CircularProgress, Paper, Slider, Popover, InputAdornment,
-    Alert, Chip, Stack
+    CircularProgress, Slider, Popover, InputAdornment,
+    Alert, Collapse, Chip, Stack
 } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import InfoIcon from '@mui/icons-material/Info';
-import CalculateIcon from '@mui/icons-material/Calculate';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import LoadingOverlay from '../components/LoadingOverlay';
 import FormPersistenceNotification from '../components/FormPersistenceNotification';
@@ -37,9 +38,10 @@ const InputPage = () => {
     const [isaAllowanceUsed, setIsaAllowanceUsed] = useState(0);
     const [loading, setLoading] = useState(false);
     const [isSimpleView, setIsSimpleView] = useState(true);
+    const [showAdvanced, setShowAdvanced] = useState(false);
+    const [showIsaSlider, setShowIsaSlider] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
     const [savingsAnchorEl, setSavingsAnchorEl] = useState(null);
-    const [showIsaSlider, setShowIsaSlider] = useState(false);
     
     // Form validation and error states
     const [earningsError, setEarningsError] = useState('');
@@ -51,8 +53,9 @@ const InputPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Quick select amounts for savings
-    const quickSelectAmounts = [5000, 10000, 15000, 20000, 25000, 50000];
+    // Quick select amounts - fewer options to reduce clutter
+    const quickSelectEarnings = [35000, 50000, 75000, 100000];
+    const quickSelectSavings = [10000, 20000, 30000, 50000];
 
     const formatCurrency = (rawValue) => {
         if (!rawValue && rawValue !== 0) return '';
@@ -91,11 +94,12 @@ const InputPage = () => {
             savingsGoals,
             isaAllowanceUsed,
             isSimpleView,
+            showAdvanced,
             showIsaSlider,
             timestamp: Date.now()
         };
         localStorage.setItem('quantifyLiteForm', JSON.stringify(formData));
-    }, [earnings, totalSavings, savingsGoals, isaAllowanceUsed, isSimpleView, showIsaSlider]);
+    }, [earnings, totalSavings, savingsGoals, isaAllowanceUsed, isSimpleView, showAdvanced, showIsaSlider]);
 
     const loadFormFromStorage = () => {
         try {
@@ -134,6 +138,31 @@ const InputPage = () => {
 
     const savingsInfoOpen = Boolean(savingsAnchorEl);
     const savingsInfoId = savingsInfoOpen ? 'savings-info-popover' : undefined;
+
+    const handleIsaToggle = () => {
+        setShowIsaSlider((prev) => {
+            const newShow = !prev;
+            if (!newShow) {
+                setIsaAllowanceUsed(0); // Reset ISA allowance if hidden
+            }
+            return newShow;
+        });
+    };
+
+    // Quick select handlers
+    const handleQuickSelectEarnings = (amount) => {
+        setEarnings(amount.toString());
+        setDisplayEarnings(formatCurrency(amount));
+        setEarningsError('');
+        setFormTouched(true);
+    };
+
+    const handleQuickSelectSavings = (amount) => {
+        setTotalSavings(amount.toString());
+        setDisplayTotalSavings(formatCurrency(amount));
+        setSavingsError('');
+        setFormTouched(true);
+    };
 
     useEffect(() => {
         if (location.state?.inputs) {
@@ -182,6 +211,7 @@ const InputPage = () => {
                 setSavingsGoals(savedData.savingsGoals || [{ amount: '', displayAmount: '', horizon: 0 }]);
                 setIsaAllowanceUsed(savedData.isaAllowanceUsed || 0);
                 setIsSimpleView(savedData.isSimpleView ?? true);
+                setShowAdvanced(savedData.showAdvanced || false);
                 setShowIsaSlider(savedData.showIsaSlider || false);
                 setShowRestoredNotification(true);
             }
@@ -196,7 +226,7 @@ const InputPage = () => {
             }, 1000); // Save 1 second after user stops typing
             return () => clearTimeout(timeoutId);
         }
-    }, [earnings, totalSavings, savingsGoals, isaAllowanceUsed, isSimpleView, showIsaSlider, formTouched, saveFormToStorage]);
+    }, [earnings, totalSavings, savingsGoals, isaAllowanceUsed, isSimpleView, showAdvanced, showIsaSlider, formTouched, saveFormToStorage]);
 
     const handleEarningsChange = (e) => {
         const rawValue = e.target.value.replace(/[^0-9]/g, '');
@@ -242,21 +272,6 @@ const InputPage = () => {
         }
     };
 
-    // Quick select handlers
-    const handleQuickSelectEarnings = (amount) => {
-        setEarnings(amount.toString());
-        setDisplayEarnings(formatCurrency(amount));
-        setEarningsError('');
-        setFormTouched(true);
-    };
-
-    const handleQuickSelectSavings = (amount) => {
-        setTotalSavings(amount.toString());
-        setDisplayTotalSavings(formatCurrency(amount));
-        setSavingsError('');
-        setFormTouched(true);
-    };
-
     const handleAddGoal = () => {
         setSavingsGoals([...savingsGoals, { amount: '', displayAmount: '', horizon: 0 }]);
     };
@@ -289,16 +304,6 @@ const InputPage = () => {
     const handleRemoveGoal = (index) => {
         const newGoals = savingsGoals.filter((_, i) => i !== index);
         setSavingsGoals(newGoals);
-    };
-
-    const handleIsaToggle = () => {
-        setShowIsaSlider((prev) => {
-            const newShow = !prev;
-            if (!newShow) {
-                setIsaAllowanceUsed(0); // Full ISA left if hidden
-            }
-            return newShow;
-        });
     };
 
     const handleSubmit = async (e) => {
@@ -389,298 +394,280 @@ const InputPage = () => {
     };
 
     return (
-        <Container maxWidth="md">
-            <Paper elevation={3} sx={{ my: { xs: 2, sm: 4 }, p: { xs: 2, sm: 4 }, borderRadius: 3 }}>
-                <Box sx={{ textAlign: 'center', mb: 4 }}>
-                    <DotLottieReact
-                        src="/animations/ThinkingCharts.lottie"
-                        loop
-                        autoplay
-                        style={{ height: '150px', width: '150px', margin: 'auto', marginBottom: '16px' }}
-                    />
-                    <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
-                        Just Save It.
-                    </Typography>
-                    <Typography variant="h7" color="text.secondary">
-                        No time to sort out your savings? Overwhelmed by your options? In a tangle over your tax? Intimidated by ISAs?
-                    </Typography>
-                    <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
-                        Answer these two questions and get your savings sorted.
-                    </Typography>
-                </Box>
-                <FormPersistenceNotification 
-                    show={showRestoredNotification}
-                    onClose={() => setShowRestoredNotification(false)}
+        <Container maxWidth="sm" sx={{ py: 3 }}>
+            <Box sx={{ mb: 3, textAlign: 'center' }}>
+                <DotLottieReact
+                    src="/animations/ThinkingCharts.lottie"
+                    loop
+                    autoplay
+                    style={{ height: '120px', width: '120px', margin: 'auto', marginBottom: '16px' }}
                 />
-                <form onSubmit={handleSubmit}>
-                    <Popover
-                        id={id}
-                        open={open}
-                        anchorEl={anchorEl}
-                        onClose={handleInfoClose}
-                        anchorOrigin={{
-                            vertical: 'bottom',
-                            horizontal: 'left',
-                        }}
-                    >
-                        <Box sx={{ p: 2, maxWidth: 400, border: '1px solid #ddd', borderRadius: '4px', boxShadow: 3 }}>
-                            <Typography variant="h6" gutterBottom>Don't Worry!</Typography>
-                            <Typography variant="body2" paragraph>
-                                A rough estimate is all we need! You only have to be accurate if you are near:
-                            </Typography>
-                            <Typography variant="body2" paragraph>
-                                <strong>£50,270 (when tax goes from 20% to 40%)</strong>
-                            </Typography>
-                            <Typography variant="body2" paragraph>
-                                <strong>£125,140 (when tax goes from 40% to 45%)</strong>
-                            </Typography>
-                            <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
-                                By earnings we mean your total income; salary, bonuses, dividends, rent receipts, etc. before tax.
-                            </Typography>
-                        </Box>
-                    </Popover>
-                    <Popover
-                        id={savingsInfoId}
-                        open={savingsInfoOpen}
-                        anchorEl={savingsAnchorEl}
-                        onClose={handleSavingsInfoClose}
-                        anchorOrigin={{
-                            vertical: 'bottom',
-                            horizontal: 'left',
-                        }}
-                    >
-                        <Box sx={{ p: 2, maxWidth: 400, border: '1px solid #ddd', borderRadius: '4px', boxShadow: 3 }}>
-                            <Typography variant="h6" gutterBottom>About Total Savings</Typography>
-                            <Typography variant="body2">
-                                Please enter the amount you're looking to save. Don't include the money you can't access because its locked away.
-                            </Typography>
-                        </Box>
-                    </Popover>
-                    <Typography variant="h5" sx={{ mt: 4, mb: 2, textAlign: 'center' }}>
-                        Roughly how much...
-                    </Typography>
+                <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 300, mb: 1 }}>
+                    Just Save It
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                    Two simple questions to optimize your savings
+                </Typography>
+            </Box>
+
+            <FormPersistenceNotification 
+                show={showRestoredNotification}
+                onClose={() => setShowRestoredNotification(false)}
+            />
+
+            <form onSubmit={handleSubmit}>
+                <Popover
+                    id={id}
+                    open={open}
+                    anchorEl={anchorEl}
+                    onClose={handleInfoClose}
+                    anchorOrigin={{
+                        vertical: 'bottom',
+                        horizontal: 'left',
+                    }}
+                >
+                    <Box sx={{ p: 2, maxWidth: 300 }}>
+                        <Typography variant="body2" paragraph>
+                            Enter your total income before tax (salary, bonuses, dividends, etc.)
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                            Key tax brackets: £50,270 (40% tax) and £125,140 (45% tax)
+                        </Typography>
+                    </Box>
+                </Popover>
+
+                <Popover
+                    id={savingsInfoId}
+                    open={savingsInfoOpen}
+                    anchorEl={savingsAnchorEl}
+                    onClose={handleSavingsInfoClose}
+                    anchorOrigin={{
+                        vertical: 'bottom',
+                        horizontal: 'left',
+                    }}
+                >
+                    <Box sx={{ p: 2, maxWidth: 300 }}>
+                        <Typography variant="body2">
+                            Enter the amount you want to save (excluding locked-away money)
+                        </Typography>
+                    </Box>
+                </Popover>
+
+                <Box sx={{ mb: 3 }}>
                     <TextField
                         fullWidth
-                        label="...will you earn this tax year?"
+                        label="Annual earnings"
                         value={displayEarnings}
                         onChange={handleEarningsChange}
                         placeholder="e.g., £50,000"
                         required
                         variant="outlined"
-                        margin="normal"
                         error={!!earningsError}
                         helperText={earningsError}
                         inputProps={{ inputMode: 'numeric' }}
                         InputProps={{
                             endAdornment: (
                                 <InputAdornment position="end">
-                                    <IconButton onClick={handleInfoClick} edge="end">
-                                        <InfoIcon />
+                                    <IconButton onClick={handleInfoClick} edge="end" size="small">
+                                        <InfoIcon fontSize="small" />
                                     </IconButton>
                                 </InputAdornment>
                             ),
                         }}
                     />
                     
-                    {/* Quick select buttons for earnings */}
-                    <Box sx={{ mt: 1, mb: 2 }}>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                            Common amounts:
-                        </Typography>
-                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                            {[25000, 35000, 50000, 75000, 100000, 150000].map((amount) => (
+                    {/* Quick select for earnings - fewer options */}
+                    <Stack direction="row" spacing={1} sx={{ mt: 1 }} useFlexGap flexWrap>
+                        {quickSelectEarnings.map((amount) => (
+                            <Chip
+                                key={amount}
+                                label={formatCurrency(amount)}
+                                onClick={() => handleQuickSelectEarnings(amount)}
+                                variant="outlined"
+                                size="small"
+                                clickable
+                            />
+                        ))}
+                    </Stack>
+                </Box>
+
+                {isSimpleView ? (
+                    <Box sx={{ mb: 3 }}>
+                        <TextField
+                            fullWidth
+                            label="Amount to save"
+                            value={displayTotalSavings}
+                            onChange={handleTotalSavingsChange}
+                            placeholder="e.g., £25,000"
+                            required
+                            variant="outlined"
+                            error={!!savingsError}
+                            helperText={savingsError}
+                            inputProps={{ inputMode: 'numeric' }}
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton onClick={handleSavingsInfoClick} edge="end" size="small">
+                                            <InfoIcon fontSize="small" />
+                                        </IconButton>
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
+                        
+                        {/* Quick select for savings - fewer options */}
+                        <Stack direction="row" spacing={1} sx={{ mt: 1 }} useFlexGap flexWrap>
+                            {quickSelectSavings.map((amount) => (
                                 <Chip
                                     key={amount}
                                     label={formatCurrency(amount)}
-                                    onClick={() => handleQuickSelectEarnings(amount)}
+                                    onClick={() => handleQuickSelectSavings(amount)}
                                     variant="outlined"
                                     size="small"
-                                    icon={<CalculateIcon fontSize="small" />}
-                                    sx={{ mb: 1 }}
+                                    clickable
                                 />
                             ))}
                         </Stack>
                     </Box>
-
-                    {isSimpleView ? (
-                        <>
-                            <TextField
-                                fullWidth
-                                label="...would you like to save?"
-                                value={displayTotalSavings}
-                                onChange={handleTotalSavingsChange}
-                                placeholder="e.g., £25,000"
-                                required
-                                variant="outlined"
-                                margin="normal"
-                                error={!!savingsError}
-                                helperText={savingsError}
-                                inputProps={{ inputMode: 'numeric' }}
-                                InputProps={{
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton onClick={handleSavingsInfoClick} edge="end">
-                                                <InfoIcon />
-                                            </IconButton>
-                                        </InputAdornment>
-                                    ),
-                                }}
-                            />
-                            
-                            {/* Quick select buttons for savings */}
-                            <Box sx={{ mt: 1, mb: 2 }}>
-                                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                    Common amounts:
-                                </Typography>
-                                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                                    {quickSelectAmounts.map((amount) => (
-                                        <Chip
-                                            key={amount}
-                                            label={formatCurrency(amount)}
-                                            onClick={() => handleQuickSelectSavings(amount)}
-                                            variant="outlined"
-                                            size="small"
-                                            icon={<CalculateIcon fontSize="small" />}
-                                            sx={{ mb: 1 }}
-                                        />
-                                    ))}
-                                </Stack>
-                            </Box>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1, mb: 2 }}>
-                                <Button
-                                    variant="outlined"
-                                    size="small"
-                                    onClick={() => setIsSimpleView(false)}
-                                >
-                                    Savings Breakdown
-                                </Button>
-                                <Button
-                                    variant="outlined"
-                                    size="small"
-                                    onClick={handleIsaToggle}
-                                >
-                                    {showIsaSlider ? 'Hide ISA Allowance' : 'Edit ISA Allowance'}
-                                </Button>
-                            </Box>
-                        </>
-                    ) : (
-                        <>
-                            <Typography variant="h5" component="h2" sx={{ mt: 4, mb: 2 }}>
-                                Savings Breakdown
-                            </Typography>
-                            {savingsGoals.map((goal, index) => (
-                                <Paper key={index} variant="outlined" sx={{ p: 2, mb: 2, position: 'relative', borderRadius: 2 }}>
-                                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, alignItems: 'center' }}>
-                                        <TextField
-                                            label="Amount to Save"
-                                            name="amount"
-                                            value={goal.displayAmount}
+                ) : (
+                    <Box sx={{ mb: 3 }}>
+                        <Typography variant="h6" sx={{ mb: 2 }}>
+                            Savings Goals
+                        </Typography>
+                        {savingsGoals.map((goal, index) => (
+                            <Box key={index} sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 1, mb: 2 }}>
+                                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, alignItems: 'center' }}>
+                                    <TextField
+                                        label="Amount"
+                                        name="amount"
+                                        value={goal.displayAmount}
+                                        onChange={(e) => handleGoalChange(index, e)}
+                                        placeholder="e.g., £10,000"
+                                        required
+                                        sx={{ flexGrow: 1 }}
+                                        inputProps={{ inputMode: 'numeric' }}
+                                        size="small"
+                                    />
+                                    <FormControl sx={{ minWidth: 120 }}>
+                                        <InputLabel size="small">Horizon</InputLabel>
+                                        <Select
+                                            name="horizon"
+                                            value={goal.horizon}
                                             onChange={(e) => handleGoalChange(index, e)}
-                                            placeholder="e.g., £10,000"
-                                            required
-                                            sx={{ flexGrow: 1, width: '100%' }}
-                                            inputProps={{ inputMode: 'numeric' }}
-                                        />
-                                        <FormControl sx={{ minWidth: {sm: 180}, width: '100%' }}>
-                                            <InputLabel>Time Horizon</InputLabel>
-                                            <Select
-                                                name="horizon"
-                                                value={goal.horizon}
-                                                onChange={(e) => handleGoalChange(index, e)}
-                                                label="Time Horizon"
-                                            >
-                                                {horizonOptions.map(option => (
-                                                    <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
-                                                ))}
-                                            </Select>
-                                        </FormControl>
-                                        {savingsGoals.length > 1 && (
-                                            <IconButton onClick={() => handleRemoveGoal(index)} color="secondary" sx={{ position: { xs: 'absolute', sm: 'static' }, top: 16, right: 8}}>
-                                                <RemoveCircleOutlineIcon />
-                                            </IconButton>
-                                        )}
-                                    </Box>
-                                </Paper>
-                            ))}
-                            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-                                <Button
-                                    type="button"
-                                    onClick={handleAddGoal}
-                                    startIcon={<AddCircleOutlineIcon />}
-                                >
-                                    Add Another Savings Goal
-                                </Button>
+                                            label="Horizon"
+                                            size="small"
+                                        >
+                                            {horizonOptions.map(option => (
+                                                <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                    {savingsGoals.length > 1 && (
+                                        <IconButton onClick={() => handleRemoveGoal(index)} size="small">
+                                            <RemoveCircleOutlineIcon />
+                                        </IconButton>
+                                    )}
+                                </Box>
                             </Box>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1, mb: 2 }}>
-                                <Button
-                                    variant="outlined"
-                                    size="small"
-                                    onClick={() => setIsSimpleView(true)}
-                                >
-                                    Use Total Savings
-                                </Button>
-                                <Button
-                                    variant="outlined"
-                                    size="small"
-                                    onClick={handleIsaToggle}
-                                >
-                                    {showIsaSlider ? 'Hide ISA Allowance' : 'Edit ISA Allowance'}
-                                </Button>
-                            </Box>
-                        </>
-                    )}
-
-                    {showIsaSlider && (
-                        <Box sx={{ mt: 3 }}>
-                            <Typography id="isa-slider-label" gutterBottom sx={{ fontWeight: 'medium' }}>
-                                ISA Allowance Used (£{isaAllowanceUsed.toLocaleString()})
-                            </Typography>
-                            <Box sx={{ px: 1 }}>
-                                <Slider
-                                    aria-labelledby="isa-slider-label"
-                                    value={isaAllowanceUsed}
-                                    onChange={(e, newValue) => setIsaAllowanceUsed(newValue)}
-                                    valueLabelDisplay="auto"
-                                    step={500}
-                                    marks
-                                    min={0}
-                                    max={20000}
-                                />
-                            </Box>
+                        ))}
+                        <Box sx={{ textAlign: 'center', mb: 2 }}>
+                            <Button
+                                type="button"
+                                onClick={handleAddGoal}
+                                startIcon={<AddCircleOutlineIcon />}
+                                size="small"
+                                variant="outlined"
+                            >
+                                Add Goal
+                            </Button>
                         </Box>
-                    )}
-
-                    {submitError && (
-                        <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
-                            {submitError}
-                        </Alert>
-                    )}
-
-                    <Box sx={{ mt: 3, position: 'relative' }}>
-                        <Button
-                            type="submit"
-                            variant="contained"
-                            size="medium"
-                            fullWidth
-                            disabled={loading}
-                        >
-                            {loading ? 'Optimizing...' : 'Optimise Savings'}
-                        </Button>
-                        {loading && (
-                            <CircularProgress
-                                size={24}
-                                sx={{
-                                    position: 'absolute',
-                                    top: '50%',
-                                    left: '50%',
-                                    marginTop: '-12px',
-                                    marginLeft: '-12px',
-                                }}
-                            />
-                        )}
                     </Box>
-                </form>
-            </Paper>
+                )}
+
+                {/* ISA Selection as separate button */}
+                <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={handleIsaToggle}
+                    >
+                        {showIsaSlider ? 'Hide ISA Allowance' : 'Edit ISA Allowance'}
+                    </Button>
+                    
+                    <Button
+                        type="button"
+                        onClick={() => setShowAdvanced(!showAdvanced)}
+                        startIcon={showAdvanced ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                        size="small"
+                        variant="text"
+                    >
+                        {isSimpleView ? 'Breakdown View' : 'Simple View'}
+                    </Button>
+                </Box>
+
+                {/* ISA Slider */}
+                <Collapse in={showIsaSlider}>
+                    <Box sx={{ mb: 3, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+                        <Typography variant="body2" sx={{ mb: 1 }}>
+                            ISA Allowance Used: £{isaAllowanceUsed.toLocaleString()}
+                        </Typography>
+                        <Slider
+                            value={isaAllowanceUsed}
+                            onChange={(e, newValue) => setIsaAllowanceUsed(newValue)}
+                            valueLabelDisplay="auto"
+                            step={1000}
+                            min={0}
+                            max={20000}
+                            size="small"
+                        />
+                    </Box>
+                </Collapse>
+                
+                {/* Advanced Options */}
+                <Collapse in={showAdvanced}>
+                    <Box sx={{ mb: 3, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+                        <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() => setIsSimpleView(!isSimpleView)}
+                            fullWidth
+                        >
+                            Switch to {isSimpleView ? 'Breakdown View' : 'Simple View'}
+                        </Button>
+                    </Box>
+                </Collapse>
+
+                {submitError && (
+                    <Alert severity="error" sx={{ mb: 2 }}>
+                        {submitError}
+                    </Alert>
+                )}
+
+                <Box sx={{ position: 'relative' }}>
+                    <Button
+                        type="submit"
+                        variant="contained"
+                        fullWidth
+                        disabled={loading}
+                        sx={{ py: 1.5 }}
+                    >
+                        {loading ? 'Optimizing...' : 'Optimize Savings'}
+                    </Button>
+                    {loading && (
+                        <CircularProgress
+                            size={24}
+                            sx={{
+                                position: 'absolute',
+                                top: '50%',
+                                left: '50%',
+                                marginTop: '-12px',
+                                marginLeft: '-12px',
+                            }}
+                        />
+                    )}
+                </Box>
+            </form>
+
             <LoadingOverlay 
                 open={loading} 
                 message="Optimizing your savings..."
