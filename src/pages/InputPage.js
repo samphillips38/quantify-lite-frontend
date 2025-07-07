@@ -584,8 +584,8 @@ const InputPage = () => {
                     </Box>
                 )}
 
-                {/* ISA Selection as separate button */}
-                <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                {/* Control buttons */}
+                <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
                     <Button
                         variant="outlined"
                         size="small"
@@ -595,13 +595,21 @@ const InputPage = () => {
                     </Button>
                     
                     <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => setIsSimpleView(!isSimpleView)}
+                    >
+                        Switch to {isSimpleView ? 'Breakdown View' : 'Simple View'}
+                    </Button>
+                    
+                    <Button
                         type="button"
                         onClick={() => setShowAdvanced(!showAdvanced)}
                         startIcon={showAdvanced ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                         size="small"
                         variant="text"
                     >
-                        {isSimpleView ? 'Breakdown View' : 'Simple View'}
+                        Advanced Options
                     </Button>
                 </Box>
 
@@ -626,14 +634,9 @@ const InputPage = () => {
                 {/* Advanced Options */}
                 <Collapse in={showAdvanced}>
                     <Box sx={{ mb: 3, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
-                        <Button
-                            variant="outlined"
-                            size="small"
-                            onClick={() => setIsSimpleView(!isSimpleView)}
-                            fullWidth
-                        >
-                            Switch to {isSimpleView ? 'Breakdown View' : 'Simple View'}
-                        </Button>
+                        <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
+                            Additional settings and options will appear here in future updates.
+                        </Typography>
                     </Box>
                 </Collapse>
 
