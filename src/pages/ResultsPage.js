@@ -4,6 +4,7 @@ import {
     Container, Box, Typography, Button
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import SummaryCard from '../components/SummaryCard';
 import InputsCard from '../components/InputsCard';
 import SimpleAnalysisSection from '../components/SimpleAnalysisSection';
@@ -131,6 +132,31 @@ const ResultsPage = () => {
 
     return (
         <Container maxWidth="lg">
+            {/* Simple Navigation */}
+            <Box sx={{ 
+                position: 'absolute', 
+                top: 16, 
+                right: 16,
+                zIndex: 1000,
+                display: 'flex',
+                gap: 1
+            }}>
+                <Button
+                    startIcon={<InfoOutlinedIcon />}
+                    onClick={() => navigate('/about')}
+                    size="small"
+                    variant="text"
+                    sx={{ 
+                        color: 'text.secondary',
+                        '&:hover': {
+                            backgroundColor: 'rgba(255, 255, 255, 0.08)'
+                        }
+                    }}
+                >
+                    About
+                </Button>
+            </Box>
+
             <Box sx={{ my: 4 }}>
                 <Typography variant="h3" component="h1" gutterBottom align="center">
                     Ka-Ching!

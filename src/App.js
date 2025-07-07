@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 import InputPage from './pages/InputPage';
 import ResultsPage from './pages/ResultsPage';
+import AboutPage from './pages/AboutPage';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import GlobalStyles from '@mui/material/GlobalStyles';
@@ -59,6 +60,17 @@ const AnimatedRoutes = () => {
             transition={pageTransition}
           >
             <ResultsPage />
+          </motion.div>
+        } />
+        <Route path="/about" element={
+          <motion.div
+            initial="initial"
+            animate="in"
+            exit="out"
+            variants={pageVariants}
+            transition={pageTransition}
+          >
+            <AboutPage />
           </motion.div>
         } />
       </Routes>

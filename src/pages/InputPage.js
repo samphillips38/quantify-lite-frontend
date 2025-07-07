@@ -12,6 +12,7 @@ import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import InfoIcon from '@mui/icons-material/Info';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import LoadingOverlay from '../components/LoadingOverlay';
 import FormPersistenceNotification from '../components/FormPersistenceNotification';
@@ -395,6 +396,31 @@ const InputPage = () => {
 
     return (
         <Container maxWidth="sm" sx={{ py: 3 }}>
+            {/* Simple Navigation */}
+            <Box sx={{ 
+                position: 'absolute', 
+                top: 16, 
+                right: 16,
+                zIndex: 1000,
+                display: 'flex',
+                gap: 1
+            }}>
+                <Button
+                    startIcon={<InfoOutlinedIcon />}
+                    onClick={() => navigate('/about')}
+                    size="small"
+                    variant="text"
+                    sx={{ 
+                        color: 'text.secondary',
+                        '&:hover': {
+                            backgroundColor: 'rgba(255, 255, 255, 0.08)'
+                        }
+                    }}
+                >
+                    About
+                </Button>
+            </Box>
+
             <Box sx={{ mb: 3, textAlign: 'center' }}>
                 <DotLottieReact
                     src="/animations/ThinkingCharts.lottie"
