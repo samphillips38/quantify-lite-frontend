@@ -60,9 +60,13 @@ const SummaryCard = ({ summary, inputs, investments }) => {
         },
         {
             title: 'Equivalent Pre Tax Rate',
-            value: `${((summary.gross_annual_interest / summary.total_investment) * 100).toFixed(2)}%`,
+            value: (() => {
+                const { net_annual_interest, tax_free_allowance, tax_rate, total_investment } = summary;
+                const equivalentPreTaxRate = ((net_annual_interest - tax_free_allowance) / (1 - tax_rate) + tax_free_allowance) / total_investment * 100;
+                return `${equivalentPreTaxRate.toFixed(2)}%`;
+            })(),
             icon: <AttachMoneyOutlinedIcon fontSize="large" sx={{ color: '#82ca9d' }} />,
-            tooltip: 'The gross (pre-tax) AER. This is the number you can directly compare to that quoted on other savings accounts.'
+            tooltip: 'The equivalent pre-tax AER that would give the same after-tax return. This is the number you can directly compare to that quoted on other savings accounts.'
         }
     ];
 
