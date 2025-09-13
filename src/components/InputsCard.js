@@ -134,7 +134,7 @@ const InputsCard = ({ inputs, isSimpleAnalysis, showIsaSlider }) => {
                     }}
                     startIcon={<ArrowBackIcon />}
                 >
-                    Edit your inputs
+                    Want to change your inputs?
                 </Button>
             </Box>
         </Card>

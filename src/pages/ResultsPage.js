@@ -60,12 +60,13 @@ const ResultsPage = () => {
             return [0, 'auto'];
         }
         const range = maxInterest - minInterest;
+        console.log(range);
         if (range === 0) {
             if (maxInterest === 0) return [0, 100];
             return [Math.floor(maxInterest * 0.8), Math.ceil(maxInterest * 1.2)];
         }
-        const lowerBound = minInterest - (range * 0.2);
-        const upperBound = maxInterest + (range * 0.2);
+        const lowerBound = minInterest - (range * 2.5);
+        const upperBound = maxInterest + (range * 0.8);
         return [Math.floor(lowerBound > 0 ? lowerBound : 0), Math.ceil(upperBound)];
     })();
 
@@ -135,7 +136,7 @@ const ResultsPage = () => {
                     Ka-Ching!
                 </Typography>
                 <Typography variant="h6" color="text.secondary" align="center" sx={{ mb: 4 }}>
-                    This is how much money your savings could make for you after tax. It is different depending on how long you lock it away.
+                    This is how much money your savings could make for you <span style={{ textDecoration: 'underline' }}>after</span> tax. It is different depending on how long you lock it away.
                 </Typography>
 
                 <SimpleAnalysisSection
