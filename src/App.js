@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 import InputPage from './pages/InputPage';
+import LoadingPage from './pages/LoadingPage';
 import ResultsPage from './pages/ResultsPage';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -46,6 +47,17 @@ const AnimatedRoutes = () => {
             transition={pageTransition}
           >
             <InputPage />
+          </motion.div>
+        } />
+        <Route path="/loading" element={
+          <motion.div
+            initial="initial"
+            animate="in"
+            exit="out"
+            variants={pageVariants}
+            transition={pageTransition}
+          >
+            <LoadingPage />
           </motion.div>
         } />
         <Route path="/results" element={

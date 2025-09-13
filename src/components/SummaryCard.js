@@ -66,7 +66,7 @@ const SummaryCard = ({ summary, inputs, investments }) => {
                 return `${equivalentPreTaxRate.toFixed(2)}%`;
             })(),
             icon: <AttachMoneyOutlinedIcon fontSize="large" sx={{ color: '#82ca9d' }} />,
-            tooltip: 'The equivalent pre-tax AER that would give the same after-tax return. This is the number you can directly compare to that quoted on other savings accounts.'
+            tooltip: 'This is the rate that you would need to find on a normal savings account to get the same after-tax return.'
         }
     ];
 
