@@ -71,13 +71,13 @@ const SimpleAnalysisSection = ({ allResults, isSimpleAnalysis, chartData, yAxisD
             {optimalHorizon && (
                 <Box sx={{ mt: 8, mb: 5 }}>
                     <Typography variant="h5" align="center">
-                        For the best return use
+                        The best return today is over
                     </Typography>
                     <Typography variant="h1" align="center" sx={{ color: '#82ca9d', fontWeight: 'bold', mb: 3 }}>
                         {optimalHorizon.name}
                     </Typography>
                     <Typography variant="h5" align="center">
-                        And invest your <strong>£{inputs.savings_goals[0].amount.toLocaleString()}</strong> as follows:
+                        with your <strong>£{inputs.savings_goals[0].amount.toLocaleString()}</strong> invested like this:
                     </Typography>
                 </Box>
             )}
