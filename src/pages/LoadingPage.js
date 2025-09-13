@@ -99,6 +99,7 @@ const LoadingPage = () => {
                                 horizon: horizon,
                             }],
                             isa_allowance_used: inputs.isa_allowance_used,
+                            other_savings_income: inputs.other_savings_income,
                         };
                         return optimiseSavings(data, MOCK_DATA_ENABLED).then(result => ({ data: result.data, inputs: data }));
                     });
@@ -124,6 +125,7 @@ const LoadingPage = () => {
                             horizon: goal.horizon,
                         })),
                         isa_allowance_used: inputs.isa_allowance_used,
+                        current_savings_income: inputs.current_savings_income,
                     };
 
                     const result = await optimiseSavings(data, MOCK_DATA_ENABLED);

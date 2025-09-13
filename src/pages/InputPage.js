@@ -30,11 +30,12 @@ const InputPage = () => {
     const [displayTotalSavings, setDisplayTotalSavings] = useState('');
     const [savingsGoals, setSavingsGoals] = useState([{ amount: '', displayAmount: '', horizon: 0 }]);
     const [isaAllowanceUsed, setIsaAllowanceUsed] = useState(0);
+    const [otherSavingsIncome, setOtherSavingsIncome] = useState(0);
     const [loading, setLoading] = useState(false);
     const [isSimpleView, setIsSimpleView] = useState(true);
     const [anchorEl, setAnchorEl] = useState(null);
     const [savingsAnchorEl, setSavingsAnchorEl] = useState(null);
-    const [showIsaSlider, setShowIsaSlider] = useState(false);
+    const [showFineTuneSection, setShowFineTuneSection] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -81,7 +82,8 @@ const InputPage = () => {
 
             // Restore ISA allowance
             setIsaAllowanceUsed(inputs.isa_allowance_used || 0);
-            setShowIsaSlider(inputs.isa_allowance_used > 0);
+            setOtherSavingsIncome(inputs.other_savings_income || 0);
+            setShowFineTuneSection((inputs.isa_allowance_used > 0) || (inputs.other_savings_income > 0));
 
             // Restore view mode
             setIsSimpleView(isSimpleAnalysis);
@@ -175,11 +177,12 @@ const InputPage = () => {
         setSavingsGoals(newGoals);
     };
 
-    const handleIsaToggle = () => {
-        setShowIsaSlider((prev) => {
+    const handleFineTuneToggle = () => {
+        setShowFineTuneSection((prev) => {
             const newShow = !prev;
             if (!newShow) {
                 setIsaAllowanceUsed(0); // Full ISA left if hidden
+                setOtherSavingsIncome(0); // Reset savings income if hidden
             }
             return newShow;
         });
@@ -198,6 +201,7 @@ const InputPage = () => {
                     horizon: 0, // This will be overridden in loading page
                 }],
                 isa_allowance_used: isaAllowanceUsed,
+                other_savings_income: otherSavingsIncome,
             }
             : {
                 earnings: parseFloat(earnings),
@@ -206,6 +210,7 @@ const InputPage = () => {
                     horizon: goal.horizon,
                 })),
                 isa_allowance_used: isaAllowanceUsed,
+                other_savings_income: otherSavingsIncome,
             };
 
         // Navigate to loading page with the inputs
@@ -338,9 +343,9 @@ const InputPage = () => {
                                 <Button
                                     variant="outlined"
                                     size="small"
-                                    onClick={handleIsaToggle}
+                                    onClick={handleFineTuneToggle}
                                 >
-                                    {showIsaSlider ? 'Hide ISA Allowance' : 'Edit ISA Allowance'}
+                                    {showFineTuneSection ? 'Hide Fine-tune Options' : 'Fine-tune Options'}
                                 </Button>
                             </Box>
                         </>
@@ -403,30 +408,57 @@ const InputPage = () => {
                                 <Button
                                     variant="outlined"
                                     size="small"
-                                    onClick={handleIsaToggle}
+                                    onClick={handleFineTuneToggle}
                                 >
-                                    {showIsaSlider ? 'Hide ISA Allowance' : 'Edit ISA Allowance'}
+                                    {showFineTuneSection ? 'Hide Fine-tune Options' : 'Fine-tune Options'}
                                 </Button>
                             </Box>
                         </>
                     )}
 
-                    {showIsaSlider && (
+                    {showFineTuneSection && (
                         <Box sx={{ mt: 3 }}>
-                            <Typography id="isa-slider-label" gutterBottom sx={{ fontWeight: 'medium' }}>
-                                ISA Allowance Used (£{isaAllowanceUsed.toLocaleString()})
+                            <Typography variant="h6" sx={{ mb: 2, fontWeight: 'medium' }}>
+                                Fine-tune Your Optimization
                             </Typography>
-                            <Box sx={{ px: 1 }}>
-                                <Slider
-                                    aria-labelledby="isa-slider-label"
-                                    value={isaAllowanceUsed}
-                                    onChange={(e, newValue) => setIsaAllowanceUsed(newValue)}
-                                    valueLabelDisplay="auto"
-                                    step={500}
-                                    marks
-                                    min={0}
-                                    max={20000}
-                                />
+                            
+                            <Box sx={{ mb: 3 }}>
+                                <Typography id="isa-slider-label" gutterBottom sx={{ fontWeight: 'medium' }}>
+                                    ISA Allowance Used (£{isaAllowanceUsed.toLocaleString()})
+                                </Typography>
+                                <Box sx={{ px: 1 }}>
+                                    <Slider
+                                        aria-labelledby="isa-slider-label"
+                                        value={isaAllowanceUsed}
+                                        onChange={(e, newValue) => setIsaAllowanceUsed(newValue)}
+                                        valueLabelDisplay="auto"
+                                        step={500}
+                                        marks
+                                        min={0}
+                                        max={20000}
+                                    />
+                                </Box>
+                            </Box>
+
+                            <Box>
+                                <Typography id="savings-income-slider-label" gutterBottom sx={{ fontWeight: 'medium' }}>
+                                    Other Savings Income (£{otherSavingsIncome.toLocaleString()}{otherSavingsIncome >= 1000 ? ' or more' : ''})
+                                </Typography>
+                                <Box sx={{ px: 1 }}>
+                                    <Slider
+                                        aria-labelledby="savings-income-slider-label"
+                                        value={otherSavingsIncome}
+                                        onChange={(e, newValue) => setOtherSavingsIncome(newValue)}
+                                        valueLabelDisplay="auto"
+                                        step={50}
+                                        marks
+                                        min={0}
+                                        max={1000}
+                                    />
+                                </Box>
+                                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                    Enter any savings interest you're already earning from other accounts
+                                </Typography>
                             </Box>
                         </Box>
                     )}

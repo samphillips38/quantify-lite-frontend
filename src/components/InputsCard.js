@@ -5,6 +5,7 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined';
 import MonetizationOnOutlinedIcon from '@mui/icons-material/MonetizationOnOutlined';
 import SavingsOutlinedIcon from '@mui/icons-material/SavingsOutlined';
+import AttachMoneyOutlinedIcon from '@mui/icons-material/AttachMoneyOutlined';
 import { useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
@@ -42,19 +43,25 @@ const InputsCard = ({ inputs, isSimpleAnalysis, showIsaSlider }) => {
             tooltip: 'Your gross annual income, used to calculate your Personal Savings Allowance.'
         },
         {
-            title: 'ISA Allowance Used',
-            value: `£${inputs.isa_allowance_used.toLocaleString()}`,
-            icon: <AccountBalanceWalletOutlinedIcon fontSize="large" color="primary" />,
-            tooltip: 'How much of your £20,000 ISA allowance you have used this tax year.'
-        },
-        {
             title: 'Savings Breakdown',
             value: savingsGoals.length > 0
                 ? savingsGoals.map((goal, idx) => `£${goal.amount.toLocaleString()} for ${getHorizonLabel(goal.horizon)}`).join('\n')
                 : 'None',
             icon: <SavingsOutlinedIcon fontSize="large" color="primary" />,
             tooltip: 'Your specific savings breakdown and how long you plan to save for each.'
-        }
+        },
+        {
+            title: 'ISA Allowance Used',
+            value: `£${inputs.isa_allowance_used.toLocaleString()}`,
+            icon: <AccountBalanceWalletOutlinedIcon fontSize="large" color="primary" />,
+            tooltip: 'How much of your £20,000 ISA allowance you have used this tax year.'
+        },
+        ...(inputs.other_savings_income > 0 ? [{
+            title: 'Other Savings Income',
+            value: `£${inputs.other_savings_income.toLocaleString()}${inputs.other_savings_income >= 1000 ? ' or more' : ''}`,
+            icon: <AttachMoneyOutlinedIcon fontSize="large" color="primary" />,
+            tooltip: 'Interest income from other savings accounts you already have, which affects your available tax-free allowance.'
+        }] : [])
     ];
 
     const handleInfoClick = (event, idx) => {
