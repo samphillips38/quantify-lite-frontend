@@ -61,8 +61,8 @@ const SummaryCard = ({ summary, inputs, investments }) => {
         {
             title: 'Equivalent Pre Tax Rate',
             value: (() => {
-                const { net_annual_interest, tax_free_allowance, tax_rate, total_investment } = summary;
-                const equivalentPreTaxRate = ((net_annual_interest - tax_free_allowance) / (1 - tax_rate) + tax_free_allowance) / total_investment * 100;
+                const { net_annual_interest, tax_free_allowance_remaining, tax_rate, total_investment } = summary;
+                const equivalentPreTaxRate = ((net_annual_interest - tax_free_allowance_remaining) / (1 - tax_rate) + tax_free_allowance_remaining) / total_investment * 100;
                 return `${equivalentPreTaxRate.toFixed(2)}%`;
             })(),
             icon: <AttachMoneyOutlinedIcon fontSize="large" sx={{ color: '#82ca9d' }} />,

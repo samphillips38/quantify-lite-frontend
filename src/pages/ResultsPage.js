@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-    Container, Box, Typography, Button
+    Container, Box, Typography, Button, IconButton, Popover
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import SummaryCard from '../components/SummaryCard';
 import InputsCard from '../components/InputsCard';
 import SimpleAnalysisSection from '../components/SimpleAnalysisSection';
@@ -40,6 +41,7 @@ const ResultsPage = () => {
     const summary = resultsData?.summary || null;
 
     const [showIsaSlider] = useState(location.state?.showIsaSlider || false);
+    const [anchorEl, setAnchorEl] = useState(null);
 
     const chartData = (isSimpleAnalysis && allResults)
         ? allResults.map(r => ({
@@ -60,7 +62,6 @@ const ResultsPage = () => {
             return [0, 'auto'];
         }
         const range = maxInterest - minInterest;
-        console.log(range);
         if (range === 0) {
             if (maxInterest === 0) return [0, 100];
             return [Math.floor(maxInterest * 0.8), Math.ceil(maxInterest * 1.2)];
@@ -76,6 +77,17 @@ const ResultsPage = () => {
     const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
     const [feedbackError, setFeedbackError] = useState('');
     const [age, setAge] = useState('');
+
+    const handleInfoClick = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleInfoClose = () => {
+        setAnchorEl(null);
+    };
+
+    const open = Boolean(anchorEl);
+    const id = open ? 'equivalent-rate-info-popover' : undefined;
 
     const handleGoBack = () => {
         navigate('/', { state: { inputs: inputs, isSimpleAnalysis: isSimpleAnalysis, showIsaSlider } });
@@ -133,8 +145,8 @@ const ResultsPage = () => {
     const netAnnualInterest = summary?.net_annual_interest || 0;
     const equivalentPreTaxRate = (() => {
         if (!summary) return 0;
-        const { net_annual_interest, tax_free_allowance, tax_rate, total_investment } = summary;
-        return ((net_annual_interest - tax_free_allowance) / (1 - tax_rate) + tax_free_allowance) / total_investment * 100;
+        const { net_annual_interest, tax_free_allowance_remaining, tax_rate, total_investment } = summary;
+        return ((net_annual_interest - tax_free_allowance_remaining) / (1 - tax_rate) + tax_free_allowance_remaining) / total_investment * 100;
     })();
 
     return (
@@ -172,10 +184,10 @@ const ResultsPage = () => {
                                 £{netAnnualInterest.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                             </Typography>
                         </Box>
-                        <Typography variant="h5" sx={{ color: 'text.secondary' }}>
-                            at
+                        <Typography variant="h8" sx={{ color: 'text.secondary' }}>
+                            equivalent to a
                         </Typography>
-                        <Box sx={{ textAlign: 'center' }}>
+                        <Box sx={{ textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <Typography variant="h3" component="div" sx={{ 
                                 fontWeight: 'bold', 
                                 color: '#82ca9d',
@@ -183,12 +195,43 @@ const ResultsPage = () => {
                             }}>
                                 {equivalentPreTaxRate.toFixed(2)}%
                             </Typography>
+                            <IconButton
+                                size="small"
+                                onClick={handleInfoClick}
+                                sx={{ ml: 0.5, p: 0.5 }}
+                            >
+                                <InfoOutlinedIcon sx={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.7)' }} />
+                            </IconButton>
                         </Box>
                     </Box>
                     <Typography variant="h8" sx={{ color: 'text.secondary', mt: 2 }}>
                         per year pre-tax rate
                     </Typography>
                 </Box>
+
+                <Popover
+                    id={id}
+                    open={open}
+                    anchorEl={anchorEl}
+                    onClose={handleInfoClose}
+                    anchorOrigin={{
+                        vertical: 'bottom',
+                        horizontal: 'center',
+                    }}
+                    transformOrigin={{
+                        vertical: 'top',
+                        horizontal: 'center',
+                    }}
+                >
+                    <Box sx={{ p: 2, maxWidth: 400, border: '1px solid #ddd', borderRadius: '4px', boxShadow: 3 }}>
+                        <Typography variant="h6" gutterBottom>Equivalent Rate Explained</Typography>
+                        <Typography variant="body2">
+                            This is the interest rate you would need to find on a standard savings account 
+                            (without ISA benefits or our optimization strategies) to achieve the same after-tax returns 
+                            as our optimized portfolio.
+                        </Typography>
+                    </Box>
+                </Popover>
                 {/* <Typography variant="h6" color="text.secondary" align="center" sx={{ mb: 4 }}>
                     This is how much money your savings could make for you <span style={{ textDecoration: 'underline' }}>after</span> tax. It is different depending on how long you lock it away.
                 </Typography> */}
