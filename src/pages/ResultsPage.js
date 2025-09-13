@@ -185,7 +185,7 @@ const ResultsPage = () => {
                             </Typography>
                         </Box>
                         <Typography variant="h8" sx={{ color: 'text.secondary' }}>
-                            equivalent to a
+                            after tax, equivalent to a
                         </Typography>
                         <Box sx={{ textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <Typography variant="h3" component="div" sx={{ 
