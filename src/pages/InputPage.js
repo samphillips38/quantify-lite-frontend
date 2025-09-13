@@ -10,7 +10,6 @@ import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import InfoIcon from '@mui/icons-material/Info';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
-const MOCK_DATA_ENABLED = false; // Set to false to use live data
 
 const horizonOptions = [
     { value: 0, label: 'Easy access' },
