@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { optimiseSavings } from '../services/api';
 import {
     Container, Box, Typography, TextField, Button,
     Select, MenuItem, FormControl, InputLabel, IconButton,
@@ -190,42 +189,17 @@ const InputPage = () => {
         e.preventDefault();
         setLoading(true);
 
-        if (isSimpleView) {
-            const horizonsToTest = [0, 6, 12, 36, 60];
-            const promises = horizonsToTest.map(horizon => {
-                const data = {
-                    earnings: parseFloat(earnings),
-                    savings_goals: [{
-                        amount: parseFloat(totalSavings),
-                        horizon: horizon,
-                    }],
-                    isa_allowance_used: isaAllowanceUsed,
-                };
-                return optimiseSavings(data, MOCK_DATA_ENABLED).then(result => ({ data: result.data, inputs: data }));
-            });
-
-            try {
-                const results = await Promise.all(promises);
-                const bestResult = results.reduce((best, current) => {
-                    const currentInterest = current.data.summary?.net_annual_interest || 0;
-                    const bestInterest = best.data.summary?.net_annual_interest || 0;
-                    return currentInterest > bestInterest ? current : best;
-                });
-                navigate('/results', {
-                    state: {
-                        results: bestResult.data,
-                        inputs: bestResult.inputs,
-                        allResults: results,
-                        isSimpleAnalysis: true
-                    }
-                });
-            } catch (error) {
-                console.error("Optimisation failed", error);
-            } finally {
-                setLoading(false);
+        // Prepare the data to pass to the loading page
+        const inputs = isSimpleView 
+            ? {
+                earnings: parseFloat(earnings),
+                savings_goals: [{
+                    amount: parseFloat(totalSavings),
+                    horizon: 0, // This will be overridden in loading page
+                }],
+                isa_allowance_used: isaAllowanceUsed,
             }
-        } else {
-            const data = {
+            : {
                 earnings: parseFloat(earnings),
                 savings_goals: savingsGoals.map(goal => ({
                     amount: parseFloat(goal.amount),
@@ -234,15 +208,13 @@ const InputPage = () => {
                 isa_allowance_used: isaAllowanceUsed,
             };
 
-            try {
-                const result = await optimiseSavings(data, MOCK_DATA_ENABLED);
-                navigate('/results', { state: { results: result.data, inputs: data, isSimpleAnalysis: false } });
-            } catch (error) {
-                console.error("Optimisation failed", error);
-            } finally {
-                setLoading(false);
+        // Navigate to loading page with the inputs
+        navigate('/loading', {
+            state: {
+                inputs: inputs,
+                isSimpleAnalysis: isSimpleView
             }
-        }
+        });
     };
 
     return (

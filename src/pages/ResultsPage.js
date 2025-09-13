@@ -129,15 +129,69 @@ const ResultsPage = () => {
         );
     }
 
+    // Calculate the key numbers for the highlight section
+    const netAnnualInterest = summary?.net_annual_interest || 0;
+    const equivalentPreTaxRate = (() => {
+        if (!summary) return 0;
+        const { net_annual_interest, tax_free_allowance, tax_rate, total_investment } = summary;
+        return ((net_annual_interest - tax_free_allowance) / (1 - tax_rate) + tax_free_allowance) / total_investment * 100;
+    })();
+
     return (
         <Container maxWidth="lg">
             <Box sx={{ my: 4 }}>
+                {/* Punchy Results Highlight */}
+
                 <Typography variant="h3" component="h1" gutterBottom align="center">
                     Ka-Ching!
                 </Typography>
-                <Typography variant="h6" color="text.secondary" align="center" sx={{ mb: 4 }}>
+                <Box sx={{ 
+                    textAlign: 'center', 
+                    mb: 6, 
+                    p: 4, 
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)', 
+                    borderRadius: 3,
+                    border: '2px solid rgba(130, 202, 157, 0.3)'
+                }}>
+                    <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold', mb: 3 }}>
+                        Your Savings Could Earn You
+                    </Typography>
+                    <Box sx={{ 
+                        display: 'flex', 
+                        flexDirection: { xs: 'column', md: 'row' },
+                        justifyContent: 'center', 
+                        alignItems: 'center', 
+                        gap: { xs: 1, md: 3 }
+                    }}>
+                        <Box sx={{ textAlign: 'center' }}>
+                            <Typography variant="h3" component="div" sx={{ 
+                                fontWeight: 'bold', 
+                                color: '#82ca9d',
+                                textShadow: '0 0 20px rgba(130, 202, 157, 0.3)'
+                            }}>
+                                £{netAnnualInterest.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                            </Typography>
+                        </Box>
+                        <Typography variant="h5" sx={{ color: 'text.secondary' }}>
+                            at
+                        </Typography>
+                        <Box sx={{ textAlign: 'center' }}>
+                            <Typography variant="h3" component="div" sx={{ 
+                                fontWeight: 'bold', 
+                                color: '#82ca9d',
+                                textShadow: '0 0 20px rgba(130, 202, 157, 0.3)'
+                            }}>
+                                {equivalentPreTaxRate.toFixed(2)}%
+                            </Typography>
+                        </Box>
+                    </Box>
+                    <Typography variant="h8" sx={{ color: 'text.secondary', mt: 2 }}>
+                        per year pre-tax rate
+                    </Typography>
+                </Box>
+                {/* <Typography variant="h6" color="text.secondary" align="center" sx={{ mb: 4 }}>
                     This is how much money your savings could make for you <span style={{ textDecoration: 'underline' }}>after</span> tax. It is different depending on how long you lock it away.
-                </Typography>
+                </Typography> */}
 
                 <SimpleAnalysisSection
                     allResults={allResults}
