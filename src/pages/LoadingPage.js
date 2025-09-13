@@ -178,7 +178,7 @@ const LoadingPage = () => {
             clearInterval(stepInterval);
             clearInterval(completionInterval);
         };
-    }, [location.state, navigate, optimizationData, error]);
+    }, [location.state, navigate, optimizationData, error, loadingSteps.length]);
 
     return (
         <Container maxWidth="md">
