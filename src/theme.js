@@ -1,6 +1,6 @@
 import { createTheme, responsiveFontSizes } from '@mui/material/styles';
 
-const purpleDark = responsiveFontSizes(createTheme({
+let theme = responsiveFontSizes(createTheme({
   palette: {
     mode: 'light',
     primary: {
@@ -160,8 +160,6 @@ const purpleDark = responsiveFontSizes(createTheme({
       },
     },
   },
-});
-
-theme = responsiveFontSizes(theme);
+}));
 
 export default theme; 
