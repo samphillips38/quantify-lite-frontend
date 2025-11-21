@@ -9,7 +9,6 @@ import InputsCard from '../components/InputsCard';
 import SimpleAnalysisSection from '../components/SimpleAnalysisSection';
 import InvestmentsSection from '../components/InvestmentsSection';
 import FeedbackSection from '../components/FeedbackSection';
-import ExportPDFButton from '../components/ExportPDFButton';
 import { submitFeedback } from '../services/api';
 import useResizeObserver from 'use-resize-observer';
 

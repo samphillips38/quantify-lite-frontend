@@ -42,20 +42,10 @@ const InputPage = () => {
     const [showIsaSlider, setShowIsaSlider] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
     const [savingsAnchorEl, setSavingsAnchorEl] = useState(null);
-    
-    // Form validation and error states
-    const [earningsError, setEarningsError] = useState('');
-    const [savingsError, setSavingsError] = useState('');
-    const [submitError, setSubmitError] = useState('');
+    const [showFineTuneSection, setShowFineTuneSection] = useState(false);
     const [formTouched, setFormTouched] = useState(false);
-    const [showRestoredNotification, setShowRestoredNotification] = useState(false);
-    
     const navigate = useNavigate();
     const location = useLocation();
-
-    // Quick select amounts - fewer options to reduce clutter
-    const quickSelectEarnings = [35000, 50000, 75000, 100000];
-    const quickSelectSavings = [10000, 20000, 30000, 50000];
 
     const formatCurrency = (rawValue) => {
         if (!rawValue && rawValue !== 0) return '';
@@ -139,31 +129,6 @@ const InputPage = () => {
     const savingsInfoOpen = Boolean(savingsAnchorEl);
     const savingsInfoId = savingsInfoOpen ? 'savings-info-popover' : undefined;
 
-    const handleIsaToggle = () => {
-        setShowIsaSlider((prev) => {
-            const newShow = !prev;
-            if (!newShow) {
-                setIsaAllowanceUsed(0); // Reset ISA allowance if hidden
-            }
-            return newShow;
-        });
-    };
-
-    // Quick select handlers
-    const handleQuickSelectEarnings = (amount) => {
-        setEarnings(amount.toString());
-        setDisplayEarnings(formatCurrency(amount));
-        setEarningsError('');
-        setFormTouched(true);
-    };
-
-    const handleQuickSelectSavings = (amount) => {
-        setTotalSavings(amount.toString());
-        setDisplayTotalSavings(formatCurrency(amount));
-        setSavingsError('');
-        setFormTouched(true);
-    };
-
     useEffect(() => {
         if (location.state?.inputs) {
             const { inputs, isSimpleAnalysis } = location.state;
@@ -213,7 +178,6 @@ const InputPage = () => {
                 setIsSimpleView(savedData.isSimpleView ?? true);
                 setShowAdvanced(savedData.showAdvanced || false);
                 setShowIsaSlider(savedData.showIsaSlider || false);
-                setShowRestoredNotification(true);
             }
         }
     }, [location.state]);
@@ -233,10 +197,6 @@ const InputPage = () => {
         setEarnings(rawValue);
         setFormTouched(true);
 
-        // Validate and set error
-        const error = validateEarnings(rawValue);
-        setEarningsError(error);
-
         if (rawValue) {
             const formattedValue = new Intl.NumberFormat('en-GB', {
                 style: 'currency',
@@ -254,10 +214,6 @@ const InputPage = () => {
         const rawValue = e.target.value.replace(/[^0-9]/g, '');
         setTotalSavings(rawValue);
         setFormTouched(true);
-
-        // Validate and set error
-        const error = validateSavings(rawValue, 'total savings amount');
-        setSavingsError(error);
 
         if (rawValue) {
             const formattedValue = new Intl.NumberFormat('en-GB', {
@@ -308,16 +264,12 @@ const InputPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setSubmitError('');
         
         // Validate form before submission
         const earningsValidation = validateEarnings(earnings);
         const savingsValidation = isSimpleView 
             ? validateSavings(totalSavings, 'total savings amount')
             : '';
-            
-        setEarningsError(earningsValidation);
-        setSavingsError(savingsValidation);
         
         // Check savings goals validation in breakdown mode
         let hasGoalErrors = false;
@@ -330,7 +282,6 @@ const InputPage = () => {
         }
         
         if (earningsValidation || savingsValidation || hasGoalErrors) {
-            setSubmitError('Please fix the errors above before submitting.');
             return;
         }
         
