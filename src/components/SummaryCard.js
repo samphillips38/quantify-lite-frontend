@@ -60,11 +60,7 @@ const SummaryCard = ({ summary, inputs, investments }) => {
         },
         {
             title: 'Equivalent Pre Tax Rate',
-            value: (() => {
-                const { net_annual_interest, tax_free_allowance_remaining, tax_rate, total_investment } = summary;
-                const equivalentPreTaxRate = ((net_annual_interest - tax_free_allowance_remaining) / (1 - tax_rate) + tax_free_allowance_remaining) / total_investment * 100;
-                return `${equivalentPreTaxRate.toFixed(2)}%`;
-            })(),
+            value: summary.equivalent_pre_tax_rate ? `${summary.equivalent_pre_tax_rate.toFixed(2)}%` : 'N/A',
             icon: <AttachMoneyOutlinedIcon fontSize="large" sx={{ color: '#9B7EDE' }} />,
             tooltip: 'This is the rate that you would need to find on a normal savings account to get the same after-tax return.'
         }

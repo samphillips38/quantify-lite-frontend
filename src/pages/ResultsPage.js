@@ -155,11 +155,7 @@ const ResultsPage = () => {
 
     // Calculate the key numbers for the highlight section
     const netAnnualInterest = summary?.net_annual_interest || 0;
-    const equivalentPreTaxRate = (() => {
-        if (!summary) return 0;
-        const { net_annual_interest, tax_free_allowance_remaining, tax_rate, total_investment } = summary;
-        return ((net_annual_interest - tax_free_allowance_remaining) / (1 - tax_rate) + tax_free_allowance_remaining) / total_investment * 100;
-    })();
+    const equivalentPreTaxRate = summary?.equivalent_pre_tax_rate || 0;
 
     return (
         <Container maxWidth="lg" sx={{ py: { xs: 3, sm: 6 } }}>
