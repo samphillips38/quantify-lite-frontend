@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
+import { useTheme } from '@mui/material/styles';
 
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -31,6 +32,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 const SimpleAnalysisSection = ({ allResults, isSimpleAnalysis, chartData, yAxisDomain, maxInterest, optimalHorizon, inputs, ref, width, height, getHorizonLabel }) => {
+    const theme = useTheme();
     if (!(isSimpleAnalysis && allResults)) return null;
     return (
         <Box sx={{ mb: 4 }}>

@@ -6,8 +6,10 @@ import ResultsPage from './pages/ResultsPage';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import GlobalStyles from '@mui/material/GlobalStyles';
-import theme from './theme';
+import { themes } from './theme';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useState, useMemo } from 'react';
+import ThemeSpeedDial from './components/ThemeSpeedDial';
 
 const pageVariants = {
   initial: {
@@ -103,7 +105,6 @@ const backgroundGradient = (
   />
 );
 
-function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -111,6 +112,7 @@ function App() {
       <Router>
         <div className="App">
           <AnimatedRoutes />
+          <ThemeSpeedDial currentTheme={themeName} setTheme={setThemeName} />
         </div>
       </Router>
     </ThemeProvider>

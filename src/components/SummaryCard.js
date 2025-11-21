@@ -10,6 +10,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useTheme } from '@mui/material/styles';
 
 const getHorizonLabel = (value) => {
     const horizonOptions = [
@@ -222,7 +223,7 @@ const SummaryCard = ({ summary, inputs, investments }) => {
                                         onClick={e => handleInfoClick(e, idx)}
                                         sx={{ ml: 0.5, p: 0.5 }}
                                     >
-                                        <InfoOutlinedIcon sx={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.7)' }} />
+                                        <InfoOutlinedIcon sx={{ fontSize: '1rem', color: theme.palette.text.secondary }} />
                                     </IconButton>
                                     <Popover
                                         open={open && popoverIndex === idx}

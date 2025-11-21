@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Container, Box, Typography, TextField, Button,
@@ -32,11 +32,17 @@ const InputPage = () => {
     const [otherSavingsIncome, setOtherSavingsIncome] = useState(0);
     const [loading, setLoading] = useState(false);
     const [isSimpleView, setIsSimpleView] = useState(true);
+    const [showAdvanced, setShowAdvanced] = useState(false);
+    const [showIsaSlider, setShowIsaSlider] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
     const [savingsAnchorEl, setSavingsAnchorEl] = useState(null);
     const [showFineTuneSection, setShowFineTuneSection] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
+
+    // Quick select amounts - fewer options to reduce clutter
+    const quickSelectEarnings = [35000, 50000, 75000, 100000];
+    const quickSelectSavings = [10000, 20000, 30000, 50000];
 
     const formatCurrency = (rawValue) => {
         if (!rawValue && rawValue !== 0) return '';
@@ -46,6 +52,56 @@ const InputPage = () => {
             minimumFractionDigits: 0,
             maximumFractionDigits: 0,
         }).format(Number(rawValue));
+    };
+
+    // Form validation functions
+    const validateEarnings = (value) => {
+        const numValue = parseFloat(value);
+        if (!value) return 'Annual earnings is required';
+        if (isNaN(numValue)) return 'Please enter a valid number';
+        if (numValue < 0) return 'Earnings cannot be negative';
+        if (numValue > 10000000) return 'Please enter a realistic amount';
+        return '';
+    };
+
+    const validateSavings = (value, fieldName = 'savings amount') => {
+        const numValue = parseFloat(value);
+        if (!value) return `${fieldName} is required`;
+        if (isNaN(numValue)) return 'Please enter a valid number';
+        if (numValue < 0) return 'Amount cannot be negative';
+        if (numValue > 1000000) return 'Please enter a realistic amount';
+        return '';
+    };
+
+    // Form persistence
+    const saveFormToStorage = useCallback(() => {
+        const formData = {
+            earnings,
+            totalSavings,
+            savingsGoals,
+            isaAllowanceUsed,
+            isSimpleView,
+            showAdvanced,
+            showIsaSlider,
+            timestamp: Date.now()
+        };
+        localStorage.setItem('quantifyLiteForm', JSON.stringify(formData));
+    }, [earnings, totalSavings, savingsGoals, isaAllowanceUsed, isSimpleView, showAdvanced, showIsaSlider]);
+
+    const loadFormFromStorage = () => {
+        try {
+            const saved = localStorage.getItem('quantifyLiteForm');
+            if (saved) {
+                const formData = JSON.parse(saved);
+                // Only restore if saved within last 24 hours
+                if (Date.now() - formData.timestamp < 24 * 60 * 60 * 1000) {
+                    return formData;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading form data:', error);
+        }
+        return null;
     };
 
     const handleInfoClick = (event) => {
@@ -69,6 +125,31 @@ const InputPage = () => {
 
     const savingsInfoOpen = Boolean(savingsAnchorEl);
     const savingsInfoId = savingsInfoOpen ? 'savings-info-popover' : undefined;
+
+    const handleIsaToggle = () => {
+        setShowIsaSlider((prev) => {
+            const newShow = !prev;
+            if (!newShow) {
+                setIsaAllowanceUsed(0); // Reset ISA allowance if hidden
+            }
+            return newShow;
+        });
+    };
+
+    // Quick select handlers
+    const handleQuickSelectEarnings = (amount) => {
+        setEarnings(amount.toString());
+        setDisplayEarnings(formatCurrency(amount));
+        setEarningsError('');
+        setFormTouched(true);
+    };
+
+    const handleQuickSelectSavings = (amount) => {
+        setTotalSavings(amount.toString());
+        setDisplayTotalSavings(formatCurrency(amount));
+        setSavingsError('');
+        setFormTouched(true);
+    };
 
     useEffect(() => {
         if (location.state?.inputs) {
@@ -107,12 +188,42 @@ const InputPage = () => {
                 setTotalSavings('');
                 setDisplayTotalSavings('');
             }
+        } else {
+            // Try to load saved form data if no state from navigation
+            const savedData = loadFormFromStorage();
+            if (savedData) {
+                setEarnings(savedData.earnings || '');
+                setDisplayEarnings(formatCurrency(savedData.earnings));
+                setTotalSavings(savedData.totalSavings || '');
+                setDisplayTotalSavings(formatCurrency(savedData.totalSavings));
+                setSavingsGoals(savedData.savingsGoals || [{ amount: '', displayAmount: '', horizon: 0 }]);
+                setIsaAllowanceUsed(savedData.isaAllowanceUsed || 0);
+                setIsSimpleView(savedData.isSimpleView ?? true);
+                setShowAdvanced(savedData.showAdvanced || false);
+                setShowIsaSlider(savedData.showIsaSlider || false);
+                setShowRestoredNotification(true);
+            }
         }
     }, [location.state]);
+
+    // Auto-save form data when it changes
+    useEffect(() => {
+        if (formTouched) {
+            const timeoutId = setTimeout(() => {
+                saveFormToStorage();
+            }, 1000); // Save 1 second after user stops typing
+            return () => clearTimeout(timeoutId);
+        }
+    }, [earnings, totalSavings, savingsGoals, isaAllowanceUsed, isSimpleView, showAdvanced, showIsaSlider, formTouched, saveFormToStorage]);
 
     const handleEarningsChange = (e) => {
         const rawValue = e.target.value.replace(/[^0-9]/g, '');
         setEarnings(rawValue);
+        setFormTouched(true);
+
+        // Validate and set error
+        const error = validateEarnings(rawValue);
+        setEarningsError(error);
 
         if (rawValue) {
             const formattedValue = new Intl.NumberFormat('en-GB', {
@@ -130,6 +241,11 @@ const InputPage = () => {
     const handleTotalSavingsChange = (e) => {
         const rawValue = e.target.value.replace(/[^0-9]/g, '');
         setTotalSavings(rawValue);
+        setFormTouched(true);
+
+        // Validate and set error
+        const error = validateSavings(rawValue, 'total savings amount');
+        setSavingsError(error);
 
         if (rawValue) {
             const formattedValue = new Intl.NumberFormat('en-GB', {
@@ -150,6 +266,8 @@ const InputPage = () => {
 
     const handleGoalChange = (index, event) => {
         const { name, value } = event.target;
+        setFormTouched(true);
+        
         const newGoals = savingsGoals.map((goal, i) => {
             if (i === index) {
                 if (name === 'amount') {
@@ -189,6 +307,32 @@ const InputPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setSubmitError('');
+        
+        // Validate form before submission
+        const earningsValidation = validateEarnings(earnings);
+        const savingsValidation = isSimpleView 
+            ? validateSavings(totalSavings, 'total savings amount')
+            : '';
+            
+        setEarningsError(earningsValidation);
+        setSavingsError(savingsValidation);
+        
+        // Check savings goals validation in breakdown mode
+        let hasGoalErrors = false;
+        if (!isSimpleView) {
+            const goalErrors = savingsGoals.some(goal => {
+                const error = validateSavings(goal.amount, 'savings goal amount');
+                return error !== '';
+            });
+            hasGoalErrors = goalErrors;
+        }
+        
+        if (earningsValidation || savingsValidation || hasGoalErrors) {
+            setSubmitError('Please fix the errors above before submitting.');
+            return;
+        }
+        
         setLoading(true);
 
         // Prepare the data to pass to the loading page

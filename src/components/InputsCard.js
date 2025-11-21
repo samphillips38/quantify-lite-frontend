@@ -8,6 +8,7 @@ import SavingsOutlinedIcon from '@mui/icons-material/SavingsOutlined';
 import AttachMoneyOutlinedIcon from '@mui/icons-material/AttachMoneyOutlined';
 import { useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { useTheme } from '@mui/material/styles';
 
 const getHorizonLabel = (value) => {
     const horizonOptions = [
