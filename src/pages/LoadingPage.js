@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { optimiseSavings } from '../services/api';
 import {
@@ -151,7 +151,7 @@ const BankCyclingDisplay = ({ currentIndex }) => {
     );
 };
 
-// Highly detailed iridescent mutating cloud animation
+// Highly detailed iridescent mutating cloud animation - High resolution and crisp
 const IridescentCloud = () => {
     // Generate iridescent colors that shift
     const getIridescentGradient = (offset) => {
@@ -169,13 +169,16 @@ const IridescentCloud = () => {
     return (
         <Box sx={{ 
             position: 'relative', 
-            width: '320px', 
-            height: '320px', 
+            width: '400px', 
+            height: '400px', 
             margin: 'auto',
             mb: 4,
-            filter: 'blur(0.5px)',
+            // Enable hardware acceleration and high-quality rendering
+            transform: 'translateZ(0)',
+            willChange: 'transform',
+            // Remove blur from container
         }}>
-            {/* Deep outer glow layers with iridescent effect */}
+            {/* Deep outer glow layers with iridescent effect - reduced blur for clarity */}
             {[...Array(6)].map((_, i) => (
                 <motion.div
                     key={`outer-glow-${i}`}
@@ -191,7 +194,10 @@ const IridescentCloud = () => {
                             hsla(${200 + i * 8}, 65%, 75%, ${0.15 - i * 0.02}) 40%,
                             transparent 70%
                         )`,
-                        filter: `blur(${25 + i * 5}px)`,
+                        // Reduced blur for sharper appearance - only outer glows get blur
+                        filter: `blur(${Math.max(8, 15 - i * 2)}px)`,
+                        transform: 'translateZ(0)',
+                        willChange: 'transform, opacity',
                     }}
                     animate={{
                         scale: [1, 1.15 + i * 0.04, 1],
@@ -207,7 +213,7 @@ const IridescentCloud = () => {
                 />
             ))}
             
-            {/* Main cloud layers with detailed morphing */}
+            {/* Main cloud layers with detailed morphing - NO blur for crisp edges */}
             {[...Array(8)].map((_, i) => {
                 const size = 100 - i * 8;
                 const offset = i * 3;
@@ -222,8 +228,13 @@ const IridescentCloud = () => {
                             top: `${offset * 0.6}%`,
                             borderRadius: '50%',
                             background: getIridescentGradient(i * 15),
-                            filter: `blur(${Math.max(0.5, 2 - i * 0.2)}px)`,
+                            // Remove blur from main layers for sharp, high-resolution appearance
+                            filter: 'none',
                             mixBlendMode: i % 2 === 0 ? 'multiply' : 'screen',
+                            transform: 'translateZ(0)',
+                            willChange: 'transform',
+                            // Enable subpixel rendering
+                            backfaceVisibility: 'hidden',
                         }}
                         animate={{
                             scale: [
@@ -266,7 +277,7 @@ const IridescentCloud = () => {
                 );
             })}
             
-            {/* Detailed inner cloud structures */}
+            {/* Detailed inner cloud structures - NO blur for sharp details */}
             {[...Array(12)].map((_, i) => {
                 const angle = (i / 12) * Math.PI * 2;
                 const radius = 30 + (i % 3) * 15;
@@ -285,9 +296,12 @@ const IridescentCloud = () => {
                                 hsla(${220 + i * 12}, 80%, 80%, 0.7) 50%,
                                 hsla(${260 + i * 10}, 70%, 70%, 0.5) 100%
                             )`,
-                            filter: `blur(${1 + (i % 2) * 0.5}px)`,
-                            transform: 'translate(-50%, -50%)',
+                            // Remove blur for crisp inner details
+                            filter: 'none',
+                            transform: 'translate(-50%, -50%) translateZ(0)',
                             mixBlendMode: i % 3 === 0 ? 'overlay' : i % 3 === 1 ? 'soft-light' : 'normal',
+                            willChange: 'transform, opacity',
+                            backfaceVisibility: 'hidden',
                         }}
                         animate={{
                             x: [
@@ -326,7 +340,7 @@ const IridescentCloud = () => {
                 );
             })}
             
-            {/* Shimmer effect overlay */}
+            {/* Shimmer effect overlay - crisp and clear */}
             <motion.div
                 style={{
                     position: 'absolute',
@@ -343,6 +357,9 @@ const IridescentCloud = () => {
                         transparent 360deg
                     )`,
                     mixBlendMode: 'overlay',
+                    filter: 'none',
+                    transform: 'translateZ(0)',
+                    willChange: 'transform',
                 }}
                 animate={{
                     rotate: [0, 360],
@@ -364,6 +381,9 @@ const LoadingPage = () => {
     const [optimizationData, setOptimizationData] = useState(null);
     const [error, setError] = useState(null);
     const [currentBankIndex, setCurrentBankIndex] = useState(0);
+    const startTimeRef = useRef(Date.now());
+    const cancelledRef = useRef(false);
+    const intervalsRef = useRef({ stepInterval: null, bankInterval: null, completionTimeout: null });
 
     const loadingSteps = [
         "Initializing optimization algorithm...",
@@ -396,24 +416,41 @@ const LoadingPage = () => {
 
 
     useEffect(() => {
-        const startTime = Date.now();
+        startTimeRef.current = Date.now();
+        cancelledRef.current = false;
         const minLoadingTime = 3000; // 3 seconds minimum
+        let stepIntervalId = null;
+        let bankIntervalId = null;
 
         // Cycle through banks every 600ms to show activity (slightly longer for readability)
-        const bankInterval = setInterval(() => {
-            setCurrentBankIndex(prev => (prev + 1) % UK_BANKS_AND_PROVIDERS.length);
+        bankIntervalId = setInterval(() => {
+            if (!cancelledRef.current) {
+                setCurrentBankIndex(prev => (prev + 1) % UK_BANKS_AND_PROVIDERS.length);
+            }
         }, 600);
+        intervalsRef.current.bankInterval = bankIntervalId;
 
-        // Simulate progress through loading steps
-        const stepInterval = setInterval(() => {
-            setCurrentStep(prev => {
-                const nextStep = prev + 1;
-                if (nextStep < loadingSteps.length) {
+        // Simulate progress through loading steps - go through each step once
+        // Calculate step duration to ensure all steps are shown within minimum loading time
+        const stepDuration = Math.max(400, minLoadingTime / loadingSteps.length);
+        
+        stepIntervalId = setInterval(() => {
+            if (!cancelledRef.current) {
+                setCurrentStep(prev => {
+                    // Advance to next step, but stop at the final step
+                    const nextStep = prev + 1;
+                    if (nextStep >= loadingSteps.length) {
+                        // Clear interval when we reach the final step
+                        if (stepIntervalId) {
+                            clearInterval(stepIntervalId);
+                        }
+                        return loadingSteps.length - 1;
+                    }
                     return nextStep;
-                }
-                return prev;
-            });
-        }, 500);
+                });
+            }
+        }, stepDuration);
+        intervalsRef.current.stepInterval = stepIntervalId;
 
         // Start the actual optimization
         const performOptimization = async () => {
@@ -475,17 +512,50 @@ const LoadingPage = () => {
         // Start optimization immediately
         performOptimization();
 
-        // Ensure minimum loading time and handle completion
-        const checkCompletion = () => {
-            const elapsedTime = Date.now() - startTime;
+        return () => {
+            if (stepIntervalId) {
+                clearInterval(stepIntervalId);
+            }
+            if (bankIntervalId) {
+                clearInterval(bankIntervalId);
+            }
+        };
+    }, [location.state, loadingSteps.length]);
+
+    // Separate effect to handle completion and navigation
+    useEffect(() => {
+        if (!optimizationData && !error) {
+            return;
+        }
+
+        // Don't navigate if user cancelled
+        if (cancelledRef.current) {
+            return;
+        }
+
+        const minLoadingTime = 3000;
+        let completionTimeoutId = null;
+
+        const handleCompletion = () => {
+            const elapsedTime = Date.now() - startTimeRef.current;
             const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
             
-            setTimeout(() => {
-                clearInterval(stepInterval);
+            completionTimeoutId = setTimeout(() => {
+                // Check again if cancelled before navigating
+                if (cancelledRef.current) {
+                    return;
+                }
+                
+                // Set to final step before navigation
                 setCurrentStep(loadingSteps.length - 1);
                 
                 // Navigate to results after a brief delay
                 setTimeout(() => {
+                    // Final check before navigation
+                    if (cancelledRef.current) {
+                        return;
+                    }
+                    
                     if (optimizationData) {
                         navigate('/results', { state: optimizationData });
                     } else if (error) {
@@ -494,22 +564,18 @@ const LoadingPage = () => {
                     }
                 }, 500);
             }, remainingTime);
+            
+            intervalsRef.current.completionTimeout = completionTimeoutId;
         };
 
-        // Check completion periodically
-        const completionInterval = setInterval(() => {
-            if (optimizationData || error) {
-                clearInterval(completionInterval);
-                checkCompletion();
-            }
-        }, 100);
+        handleCompletion();
 
         return () => {
-            clearInterval(stepInterval);
-            clearInterval(completionInterval);
-            clearInterval(bankInterval);
+            if (completionTimeoutId) {
+                clearTimeout(completionTimeoutId);
+            }
         };
-    }, [location.state, navigate, optimizationData, error, loadingSteps.length]);
+    }, [optimizationData, error, navigate, loadingSteps.length]);
 
     return (
         <Container maxWidth="sm">
@@ -581,7 +647,24 @@ const LoadingPage = () => {
                     >
                         <Button
                             variant="text"
-                            onClick={() => navigate('/')}
+                            onClick={() => {
+                                // Mark as cancelled to prevent navigation to results
+                                cancelledRef.current = true;
+                                
+                                // Clear all intervals and timeouts
+                                if (intervalsRef.current.stepInterval) {
+                                    clearInterval(intervalsRef.current.stepInterval);
+                                }
+                                if (intervalsRef.current.bankInterval) {
+                                    clearInterval(intervalsRef.current.bankInterval);
+                                }
+                                if (intervalsRef.current.completionTimeout) {
+                                    clearTimeout(intervalsRef.current.completionTimeout);
+                                }
+                                
+                                // Navigate back to input page
+                                navigate('/');
+                            }}
                             sx={{
                                 color: '#6B5B8A',
                                 textTransform: 'none',
