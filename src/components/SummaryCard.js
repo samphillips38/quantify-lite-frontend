@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Card, CardContent, Typography, Box, Button, Collapse, CircularProgress, CardActions, Popover, IconButton } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
@@ -35,6 +35,18 @@ const SummaryCard = ({ summary, inputs, investments }) => {
     const [anchorEl, setAnchorEl] = useState(null);
     const [popoverIndex, setPopoverIndex] = useState(null);
 
+    const handleInfoClick = useCallback((event, idx) => {
+        setAnchorEl(event.currentTarget);
+        setPopoverIndex(idx);
+    }, []);
+    
+    const handlePopoverClose = useCallback(() => {
+        setAnchorEl(null);
+        setPopoverIndex(null);
+    }, []);
+    
+    const open = Boolean(anchorEl);
+
     if (!summary) {
         return null;
     }
@@ -65,20 +77,10 @@ const SummaryCard = ({ summary, inputs, investments }) => {
                 const equivalentPreTaxRate = ((net_annual_interest - tax_free_allowance_remaining) / (1 - tax_rate) + tax_free_allowance_remaining) / total_investment * 100;
                 return `${equivalentPreTaxRate.toFixed(2)}%`;
             })(),
-            icon: <AttachMoneyOutlinedIcon fontSize="large" sx={{ color: '#82ca9d' }} />,
+            icon: <AttachMoneyOutlinedIcon fontSize="large" sx={{ color: '#9B7EDE' }} />,
             tooltip: 'This is the rate that you would need to find on a normal savings account to get the same after-tax return.'
         }
     ];
-
-    const handleInfoClick = (event, idx) => {
-        setAnchorEl(event.currentTarget);
-        setPopoverIndex(idx);
-    };
-    const handlePopoverClose = () => {
-        setAnchorEl(null);
-        setPopoverIndex(null);
-    };
-    const open = Boolean(anchorEl);
 
     // Helper to create a stable cache key for the current plan
     const getPlanCacheKey = () => {
@@ -125,7 +127,6 @@ const SummaryCard = ({ summary, inputs, investments }) => {
         const investmentsText = (investments || []).map(inv => `- Invest £${(parseFloat(inv.amount) || 0).toLocaleString()} in ${inv.account_name || 'N/A'} at ${inv.aer || 'N/A'}% AER. This is a ${inv.is_isa ? 'ISA' : 'standard'} account from ${inv.platform || 'N/A'} with a term of ${inv.term || 'N/A'}.`).join('\n');
 
         const annualTax = (summary.gross_annual_interest || 0) - (summary.net_annual_interest || 0);
-        console.log("Annual Tax: ", annualTax);
 
         const prompt = `\nYou are a friendly and helpful financial assistant called Quantify Lite. 
         Your goal is to explain a savings plan to a user in a simple and clear way.\n\n
@@ -198,7 +199,7 @@ const SummaryCard = ({ summary, inputs, investments }) => {
             <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
                 <Grid container spacing={2} justifyContent="center" sx={{ mt: 1 }}>
                     {summaryItems.map((item, idx) => (
-                        <Grid xs={12} sm={6} md={3} key={item.title}>
+                        <Grid size={{ xs: 12, sm: 6, md: 3 }} key={item.title}>
                             <Box sx={{ textAlign: 'center', p: 1 }}>
                                 {item.icon}
                                 <Typography 
@@ -210,8 +211,8 @@ const SummaryCard = ({ summary, inputs, investments }) => {
                                         alignItems: 'center', 
                                         justifyContent: 'center',
                                         ...(item.title === 'Equivalent Pre Tax Rate' ? { 
-                                            color: '#82ca9d', 
-                                            fontWeight: 'bold' 
+                                            color: '#9B7EDE', 
+                                            fontWeight: 600 
                                         } : {})
                                     }}
                                 >
@@ -238,8 +239,8 @@ const SummaryCard = ({ summary, inputs, investments }) => {
                                     variant="h4" 
                                     color="text.primary"
                                     sx={item.title === 'Equivalent Pre Tax Rate' ? { 
-                                        color: '#82ca9d', 
-                                        fontWeight: 'bold' 
+                                        color: '#9B7EDE', 
+                                        fontWeight: 600 
                                     } : {}}
                                 >
                                     {item.value}

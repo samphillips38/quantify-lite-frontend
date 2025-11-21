@@ -13,8 +13,8 @@ const FeedbackSection = ({ nps, setNps, useful, setUseful, improvements, setImpr
     return (
         !feedbackSubmitted ? (
             <Box>
-                <Typography variant="h4" component="h2" align="left" sx={{ mb: 2, mt: 8 }}>
-                    We'd love your <span style={{ color: '#82ca9d' }}>feedback</span>!
+                <Typography variant="h5" component="h2" align="left" sx={{ mb: 3, mt: 8, fontWeight: 600, color: '#2D1B4E' }}>
+                    We'd love your <span style={{ color: '#9B7EDE' }}>feedback</span>!
                 </Typography>
                 <Card sx={{ mt: 4, p: 2 }}>
                     <CardContent>
@@ -98,16 +98,9 @@ const FeedbackSection = ({ nps, setNps, useful, setUseful, improvements, setImpr
                                     size="medium"
                                     fullWidth
                                     sx={{
-                                        fontWeight: 'bold',
+                                        fontWeight: 600,
                                         fontSize: '1.1rem',
                                         py: 2,
-                                        backgroundColor: 'rgba(202, 178, 234, 0.15)',
-                                        color: '#ffffff',
-                                        boxShadow: 'none',
-                                        '&:hover': {
-                                            backgroundColor: 'rgba(149, 116, 172, 0.25)',
-                                            boxShadow: 'none',
-                                        },
                                     }}
                                 >
                                     Submit Feedback
