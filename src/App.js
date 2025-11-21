@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-route
 import InputPage from './pages/InputPage';
 import LoadingPage from './pages/LoadingPage';
 import ResultsPage from './pages/ResultsPage';
+import ShareButton from './components/ShareButton';
+import { ShareProvider } from './contexts/ShareContext';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import GlobalStyles from '@mui/material/GlobalStyles';
@@ -108,11 +110,14 @@ function App() {
     <ThemeProvider theme={defaultTheme}>
       <CssBaseline />
       {backgroundGradient}
-      <Router>
-        <div className="App">
-          <AnimatedRoutes />
-        </div>
-      </Router>
+      <ShareProvider>
+        <Router>
+          <div className="App">
+            <AnimatedRoutes />
+            <ShareButton />
+          </div>
+        </Router>
+      </ShareProvider>
     </ThemeProvider>
   );
 }

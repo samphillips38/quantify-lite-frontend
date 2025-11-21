@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
     Container, Box, Typography, Button, IconButton, Popover, Card, CardContent
@@ -11,6 +11,7 @@ import SimpleAnalysisSection from '../components/SimpleAnalysisSection';
 import InvestmentsSection from '../components/InvestmentsSection';
 import FeedbackSection from '../components/FeedbackSection';
 import { submitFeedback } from '../services/api';
+import { useShare } from '../contexts/ShareContext';
 import { motion } from 'framer-motion';
 
 const horizonOptions = [
@@ -77,6 +78,7 @@ const ResultsPage = () => {
     const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
     const [feedbackError, setFeedbackError] = useState('');
     const [age, setAge] = useState('');
+    const { showEncouragementBubble } = useShare();
 
     const handleInfoClick = useCallback((event) => {
         setAnchorEl(event.currentTarget);
@@ -92,6 +94,17 @@ const ResultsPage = () => {
     const handleGoBack = useCallback(() => {
         navigate('/', { state: { inputs: inputs, isSimpleAnalysis: isSimpleAnalysis, showIsaSlider } });
     }, [navigate, inputs, isSimpleAnalysis, showIsaSlider]);
+
+    // Show encouragement popup after a delay when results page loads
+    useEffect(() => {
+        if (summary) {
+            const timer = setTimeout(() => {
+                showEncouragementBubble();
+            }, 3000); // Show after 3 seconds
+
+            return () => clearTimeout(timer);
+        }
+    }, [summary, showEncouragementBubble]);
 
     const handleFeedbackSubmit = async (e) => {
         e.preventDefault();
