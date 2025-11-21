@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
     Container, Box, Typography, Button, IconButton, Popover, Card, CardContent
@@ -11,7 +11,6 @@ import SimpleAnalysisSection from '../components/SimpleAnalysisSection';
 import InvestmentsSection from '../components/InvestmentsSection';
 import FeedbackSection from '../components/FeedbackSection';
 import { submitFeedback } from '../services/api';
-import useResizeObserver from 'use-resize-observer';
 import { motion } from 'framer-motion';
 
 const horizonOptions = [
@@ -33,7 +32,6 @@ const getHorizonLabel = (value) => {
 const ResultsPage = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const { ref, width = 0, height = 0 } = useResizeObserver();
     const resultsData = location.state?.results;
     const inputs = location.state?.inputs;
     const allResults = location.state?.allResults;
@@ -79,20 +77,20 @@ const ResultsPage = () => {
     const [feedbackError, setFeedbackError] = useState('');
     const [age, setAge] = useState('');
 
-    const handleInfoClick = (event) => {
+    const handleInfoClick = useCallback((event) => {
         setAnchorEl(event.currentTarget);
-    };
+    }, []);
 
-    const handleInfoClose = () => {
+    const handleInfoClose = useCallback(() => {
         setAnchorEl(null);
-    };
+    }, []);
 
     const open = Boolean(anchorEl);
     const id = open ? 'equivalent-rate-info-popover' : undefined;
 
-    const handleGoBack = () => {
+    const handleGoBack = useCallback(() => {
         navigate('/', { state: { inputs: inputs, isSimpleAnalysis: isSimpleAnalysis, showIsaSlider } });
-    };
+    }, [navigate, inputs, isSimpleAnalysis, showIsaSlider]);
 
     const handleFeedbackSubmit = async (e) => {
         e.preventDefault();
@@ -100,22 +98,33 @@ const ResultsPage = () => {
             setFeedbackError('Please fill in all required fields.');
             return;
         }
+        
+        if (!resultsData?.optimization_record_id) {
+            setFeedbackError('Missing optimization record ID. Please go back and try again.');
+            console.error('Missing optimization_record_id in resultsData:', resultsData);
+            return;
+        }
+        
         setFeedbackError('');
 
         const feedbackData = {
             optimization_record_id: resultsData.optimization_record_id,
             nps_score: parseInt(nps, 10),
             useful: useful,
-            improvements: improvements,
-            age: age,
+            improvements: improvements || undefined,
+            ...(age && age.trim() !== '' && { age: parseInt(age, 10) }),
         };
+
+        console.log('Submitting feedback with data:', feedbackData);
 
         try {
             await submitFeedback(feedbackData);
             setFeedbackSubmitted(true);
         } catch (error) {
-            setFeedbackError(`There was an error submitting your feedback. Please try again. \n${error.message}`);
-            console.error(error);
+            const errorMessage = error.response?.data?.error || error.message || 'Unknown error';
+            console.error('Feedback submission error:', error);
+            console.error('Error response data:', error.response?.data);
+            setFeedbackError(`There was an error submitting your feedback. Please try again. \n${errorMessage}`);
         }
     };
 
@@ -272,10 +281,6 @@ const ResultsPage = () => {
                         maxInterest={maxInterest}
                         optimalHorizon={optimalHorizon}
                         inputs={inputs}
-                        ref={ref}
-                        width={width}
-                        height={height}
-                        getHorizonLabel={getHorizonLabel}
                     />
 
                     <Typography variant="h5" component="h2" align="left" sx={{ mb: 3, mt: 8, fontWeight: 600, color: '#2D1B4E' }}>
