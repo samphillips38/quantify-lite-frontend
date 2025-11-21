@@ -56,9 +56,20 @@ Follow these instructions to get the frontend running on your local machine.
     ```sh
     npm run dev
     ```
-    This will open the application in your default web browser at [http://localhost:3000](http://localhost:3000).
+    This will start the React development server and open the application in your default web browser at [http://localhost:3000](http://localhost:3000).
 
 2.  The application will automatically reload if you make any changes to the source files.
+
+3.  To build the application for production, run:
+    ```sh
+    npm run build
+    ```
+
+4.  To serve the production build locally, run:
+    ```sh
+    npm start
+    ```
+    This serves the built application (requires running `npm run build` first).
 
 ### Operation
 

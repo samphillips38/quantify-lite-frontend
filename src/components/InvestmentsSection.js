@@ -6,20 +6,20 @@ const InvestmentsSection = ({ investments }) => {
     if (!investments || investments.length === 0) return null;
     return (
         <>
-            <Typography variant="h4" component="h2" align="left" sx={{ mb: 2, mt: 8 }}>
+            <Typography variant="h5" component="h2" align="left" sx={{ mb: 3, mt: 8, fontWeight: 600, color: '#2D1B4E' }}>
                 {investments.length === 1 ? (
                     <>By saving in this{' '}
-                        <span style={{ color: '#82ca9d', fontWeight: 'bold' }}>account</span>...
+                        <span style={{ color: '#9B7EDE', fontWeight: 600 }}>account</span>...
                     </>
                 ) : (
                     <>By saving in these{' '}
-                        <span style={{ color: '#82ca9d', fontWeight: 'bold' }}>{investments.length} accounts</span>...
+                        <span style={{ color: '#9B7EDE', fontWeight: 600 }}>{investments.length} accounts</span>...
                     </>
                 )}
             </Typography>
             <Grid container spacing={4}>
                 {investments.map((item, index) => (
-                    <Grid xs={12} sm={6} md={4} key={index}>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
                         <CardActionArea component="a" href={item.url} target="_blank" rel="noopener noreferrer" sx={{ width: '100%', height: '100%' }}>
                             <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                                 <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', p: 2.5 }}>
@@ -39,22 +39,22 @@ const InvestmentsSection = ({ investments }) => {
                                     {/* Financial Details */}
                                     <Box sx={{ mt: 'auto', pt: 2, borderTop: 1, borderColor: 'divider' }}>
                                         <Grid container spacing={0.5}>
-                                            <Grid item xs={7}>
+                                            <Grid size={{ xs: 7 }}>
                                                 <Typography variant="body1" color="text.secondary">Amount to Invest:</Typography>
                                             </Grid>
-                                            <Grid item xs={5} sx={{ textAlign: 'right' }}>
+                                            <Grid size={{ xs: 5 }} sx={{ textAlign: 'right' }}>
                                                 <Typography variant="body1" sx={{ fontWeight: 'bold' }}>£{parseFloat(item.amount).toLocaleString()}</Typography>
                                             </Grid>
-                                            <Grid item xs={7}>
+                                            <Grid size={{ xs: 7 }}>
                                                 <Typography variant="body1" color="text.secondary">AER:</Typography>
                                             </Grid>
-                                            <Grid item xs={5} sx={{ textAlign: 'right' }}>
+                                            <Grid size={{ xs: 5 }} sx={{ textAlign: 'right' }}>
                                                 <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{item.aer}%</Typography>
                                             </Grid>
-                                            <Grid item xs={7}>
+                                            <Grid size={{ xs: 7 }}>
                                                 <Typography variant="body1" color="text.secondary">Term:</Typography>
                                             </Grid>
-                                            <Grid item xs={5} sx={{ textAlign: 'right' }}>
+                                            <Grid size={{ xs: 5 }} sx={{ textAlign: 'right' }}>
                                                 <Typography variant="body1" sx={{ fontWeight: 'bold' }}>{item.term}</Typography>
                                             </Grid>
                                         </Grid>
