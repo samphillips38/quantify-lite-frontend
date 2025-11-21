@@ -28,6 +28,7 @@ const getHorizonLabel = (value) => {
 };
 
 const SummaryCard = ({ summary, inputs, investments }) => {
+    const theme = useTheme();
     const [expanded, setExpanded] = useState(false);
     const [explanation, setExplanation] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
