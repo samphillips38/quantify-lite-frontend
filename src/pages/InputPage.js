@@ -38,10 +38,6 @@ const InputPage = () => {
     const [savingsAnchorEl, setSavingsAnchorEl] = useState(null);
     const [showFineTuneSection, setShowFineTuneSection] = useState(false);
     const [formTouched, setFormTouched] = useState(false);
-    const [earningsError, setEarningsError] = useState('');
-    const [savingsError, setSavingsError] = useState('');
-    const [submitError, setSubmitError] = useState('');
-    const [showRestoredNotification, setShowRestoredNotification] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
 

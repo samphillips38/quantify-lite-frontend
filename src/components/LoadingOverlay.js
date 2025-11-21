@@ -25,7 +25,7 @@ import {
 } from '@mui/icons-material';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
-const LoadingOverlay = ({ open, message = 'Optimizing your savings...', progress = null }) => {
+const LoadingOverlay = ({ open, message = 'Optimizing your savings...' }) => {
     const [currentStage, setCurrentStage] = useState(0);
     const [stageProgress, setStageProgress] = useState(0);
     const [accountsAnalyzed, setAccountsAnalyzed] = useState(0);
