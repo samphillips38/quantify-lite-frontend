@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Container, Box, Typography, TextField, Button,
     Select, MenuItem, FormControl, InputLabel, IconButton,
-    CircularProgress, Slider, Popover, InputAdornment, Card, CardContent
+    CircularProgress, Slider, Popover, InputAdornment, Card, CardContent, Alert, Collapse
 } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
@@ -38,6 +38,7 @@ const InputPage = () => {
     const [savingsAnchorEl, setSavingsAnchorEl] = useState(null);
     const [showFineTuneSection, setShowFineTuneSection] = useState(false);
     const [formTouched, setFormTouched] = useState(false);
+    const [errorMessage, setErrorMessage] = useState(null);
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -122,6 +123,15 @@ const InputPage = () => {
 
     const savingsInfoOpen = Boolean(savingsAnchorEl);
     const savingsInfoId = savingsInfoOpen ? 'savings-info-popover' : undefined;
+
+    // Handle error messages from navigation state
+    useEffect(() => {
+        if (location.state?.error) {
+            setErrorMessage(location.state.error);
+            // Clear error from location state to prevent it from showing again on refresh
+            window.history.replaceState({}, document.title);
+        }
+    }, [location.state]);
 
     useEffect(() => {
         if (location.state?.inputs) {
@@ -331,6 +341,17 @@ const InputPage = () => {
                 transition={{ duration: 0.5 }}
             >
                 <Box sx={{ textAlign: 'center', mb: 6 }}>
+                    <Collapse in={!!errorMessage}>
+                        <Alert 
+                            severity="error" 
+                            onClose={() => setErrorMessage(null)}
+                            sx={{ mb: 3, textAlign: 'left' }}
+                        >
+                            <Typography variant="body2" component="div">
+                                <strong>Optimization failed:</strong> {errorMessage}
+                            </Typography>
+                        </Alert>
+                    </Collapse>
                     <Typography 
                         variant="h3" 
                         component="h1" 

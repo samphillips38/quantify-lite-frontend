@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { optimiseSavings } from '../services/api';
+import { optimiseSavings, getSessionId, generateBatchId } from '../services/api';
 import {
     Container, Box, Typography, Button
 } from '@mui/material';
@@ -456,8 +456,11 @@ const LoadingPage = () => {
         const performOptimization = async () => {
             try {
                 const { inputs, isSimpleAnalysis } = location.state;
+                const sessionId = getSessionId();
                 
                 if (isSimpleAnalysis) {
+                    // Generate a batch_id for this bulk optimization run
+                    const batchId = generateBatchId();
                     const horizonsToTest = [0, 6, 12, 36, 60];
                     const promises = horizonsToTest.map(horizon => {
                         const data = {
@@ -468,8 +471,10 @@ const LoadingPage = () => {
                             }],
                             isa_allowance_used: inputs.isa_allowance_used,
                             other_savings_income: inputs.other_savings_income,
+                            session_id: sessionId,
+                            batch_id: batchId,  // All optimizations in this run share the same batch_id
                         };
-                        return optimiseSavings(data, false).then(result => ({ data: result.data, inputs: data }));
+                        return optimiseSavings(data).then(result => ({ data: result.data, inputs: data }));
                     });
 
                     const results = await Promise.all(promises);
@@ -483,7 +488,8 @@ const LoadingPage = () => {
                         results: bestResult.data,
                         inputs: bestResult.inputs,
                         allResults: results,
-                        isSimpleAnalysis: true
+                        isSimpleAnalysis: true,
+                        sessionId: sessionId  // Pass session_id to results page
                     });
                 } else {
                     const data = {
@@ -494,13 +500,16 @@ const LoadingPage = () => {
                         })),
                         isa_allowance_used: inputs.isa_allowance_used,
                         other_savings_income: inputs.other_savings_income,
+                        session_id: sessionId,
+                        // No batch_id for single optimizations
                     };
 
-                    const result = await optimiseSavings(data, false);
+                    const result = await optimiseSavings(data);
                     setOptimizationData({
                         results: result.data,
                         inputs: data,
-                        isSimpleAnalysis: false
+                        isSimpleAnalysis: false,
+                        sessionId: sessionId  // Pass session_id to results page
                     });
                 }
             } catch (error) {
@@ -559,8 +568,9 @@ const LoadingPage = () => {
                     if (optimizationData) {
                         navigate('/results', { state: optimizationData });
                     } else if (error) {
-                        // Handle error case - could navigate back to input page
-                        navigate('/', { state: { error: 'Optimization failed. Please try again.' } });
+                        // Handle error case - show descriptive error message
+                        const errorMessage = error.message || error.toString() || 'Optimization failed. Please try again.';
+                        navigate('/', { state: { error: errorMessage } });
                     }
                 }, 500);
             }, remainingTime);

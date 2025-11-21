@@ -36,6 +36,7 @@ const ResultsPage = () => {
     const inputs = location.state?.inputs;
     const allResults = location.state?.allResults;
     const isSimpleAnalysis = location.state?.isSimpleAnalysis;
+    const sessionId = location.state?.sessionId;
     const investments = resultsData?.investments || [];
     const summary = resultsData?.summary || null;
 
@@ -109,6 +110,7 @@ const ResultsPage = () => {
 
         const feedbackData = {
             optimization_record_id: resultsData.optimization_record_id,
+            session_id: sessionId,  // Link feedback to the user session
             nps_score: parseInt(nps, 10),
             useful: useful,
             improvements: improvements || undefined,
