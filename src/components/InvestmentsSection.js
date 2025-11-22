@@ -60,7 +60,7 @@ const InvestmentsSection = ({ investments, inputs, summary, sessionId, optimizat
         setIsSending(true);
 
         try {
-            await emailResults({
+            const response = await emailResults({
                 email: email.trim(),
                 inputs: inputs,
                 summary: summary,
@@ -69,6 +69,7 @@ const InvestmentsSection = ({ investments, inputs, summary, sessionId, optimizat
                 optimization_record_id: optimizationRecordId,
                 batch_id: getBatchId()  // Get batch_id from sessionStorage
             });
+            // Accept both 200 (success) and 202 (accepted, processing) as success
             setEmailSuccess(true);
             setTimeout(() => {
                 setEmailDialogOpen(false);
