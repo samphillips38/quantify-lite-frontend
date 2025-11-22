@@ -12,7 +12,6 @@ The application provides a user-friendly interface for users to input their fina
 -   **Dynamic Savings Goals:** Users can add multiple savings goals, each with a specific amount and time horizon.
 -   **Interactive Results:** The results page displays a list of recommended investment accounts. Each item is clickable and redirects to the provider's website.
 -   **Data-Driven Visuals:** Each result includes details like the amount to invest, the account's AER, its term, and whether it's an ISA.
--   **Mock Data Mode:** A built-in toggle allows for frontend testing and demonstration without requiring a running backend.
 -   **Modern Design:** A sleek, responsive design with a pale pink and purple color scheme.
 
 ## How It Works
@@ -21,9 +20,10 @@ The frontend is structured into several key areas:
 
 -   `src/pages`: Contains the main page components:
     -   `InputPage.js`: A form to collect the user's annual earnings and a list of savings goals. It manages the form state and sends the data to the optimization service upon submission.
+    -   `LoadingPage.js`: A page that displays in between the `InputPage.js` and `ResultsPage.js`. A loading animation and list of accounts displays while collecting results from the backend.
     -   `ResultsPage.js`: Displays the optimization results passed from the input page. It renders a list of investment recommendations and provides links to external account pages.
 -   `src/services`: Handles API communication.
-    -   `api.js`: Contains the `optimiseSavings` function, which makes a POST request to the backend's `/optimise` endpoint. It can also return a hardcoded set of mock data if the "Use Mock Data" option is selected, which is useful for testing or if the backend is unavailable.
+    -   `api.js`: Contains the `optimiseSavings` function, which makes a POST request to the backend's `/optimise` endpoint. Also contains `submitFeedback` function, which makes a POST request to `/feedback` to store feedback results.
 -   `src/styles`: Contains the CSS files for styling the application.
     -   `App.css`: Global styles and theme variables (colors, fonts, etc.).
     -   `InputPage.css`: Styles specific to the input form and its components.
@@ -56,9 +56,20 @@ Follow these instructions to get the frontend running on your local machine.
     ```sh
     npm run dev
     ```
-    This will open the application in your default web browser at [http://localhost:3000](http://localhost:3000).
+    This will start the React development server and open the application in your default web browser at [http://localhost:3000](http://localhost:3000).
 
 2.  The application will automatically reload if you make any changes to the source files.
+
+3.  To build the application for production, run:
+    ```sh
+    npm run build
+    ```
+
+4.  To serve the production build locally, run:
+    ```sh
+    npm start
+    ```
+    This serves the built application (requires running `npm run build` first).
 
 ### Operation
 

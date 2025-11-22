@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Container, Box, Typography, TextField, Button,
     Select, MenuItem, FormControl, InputLabel, IconButton,
-    CircularProgress, Paper, Slider, Popover, InputAdornment
+    CircularProgress, Slider, Popover, InputAdornment, Card, CardContent, Alert, Collapse
 } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import InfoIcon from '@mui/icons-material/Info';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { motion } from 'framer-motion';
 
 
 const horizonOptions = [
@@ -32,9 +32,13 @@ const InputPage = () => {
     const [otherSavingsIncome, setOtherSavingsIncome] = useState(0);
     const [loading, setLoading] = useState(false);
     const [isSimpleView, setIsSimpleView] = useState(true);
+    const [showAdvanced, setShowAdvanced] = useState(false);
+    const [showIsaSlider, setShowIsaSlider] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
     const [savingsAnchorEl, setSavingsAnchorEl] = useState(null);
     const [showFineTuneSection, setShowFineTuneSection] = useState(false);
+    const [formTouched, setFormTouched] = useState(false);
+    const [errorMessage, setErrorMessage] = useState(null);
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -46,6 +50,56 @@ const InputPage = () => {
             minimumFractionDigits: 0,
             maximumFractionDigits: 0,
         }).format(Number(rawValue));
+    };
+
+    // Form validation functions
+    const validateEarnings = (value) => {
+        const numValue = parseFloat(value);
+        if (!value) return 'Annual earnings is required';
+        if (isNaN(numValue)) return 'Please enter a valid number';
+        if (numValue < 0) return 'Earnings cannot be negative';
+        if (numValue > 10000000) return 'Please enter a realistic amount';
+        return '';
+    };
+
+    const validateSavings = (value, fieldName = 'savings amount') => {
+        const numValue = parseFloat(value);
+        if (!value) return `${fieldName} is required`;
+        if (isNaN(numValue)) return 'Please enter a valid number';
+        if (numValue < 0) return 'Amount cannot be negative';
+        if (numValue > 1000000) return 'Please enter a realistic amount';
+        return '';
+    };
+
+    // Form persistence
+    const saveFormToStorage = useCallback(() => {
+        const formData = {
+            earnings,
+            totalSavings,
+            savingsGoals,
+            isaAllowanceUsed,
+            isSimpleView,
+            showAdvanced,
+            showIsaSlider,
+            timestamp: Date.now()
+        };
+        localStorage.setItem('quantifyLiteForm', JSON.stringify(formData));
+    }, [earnings, totalSavings, savingsGoals, isaAllowanceUsed, isSimpleView, showAdvanced, showIsaSlider]);
+
+    const loadFormFromStorage = () => {
+        try {
+            const saved = localStorage.getItem('quantifyLiteForm');
+            if (saved) {
+                const formData = JSON.parse(saved);
+                // Only restore if saved within last 24 hours
+                if (Date.now() - formData.timestamp < 24 * 60 * 60 * 1000) {
+                    return formData;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading form data:', error);
+        }
+        return null;
     };
 
     const handleInfoClick = (event) => {
@@ -69,6 +123,15 @@ const InputPage = () => {
 
     const savingsInfoOpen = Boolean(savingsAnchorEl);
     const savingsInfoId = savingsInfoOpen ? 'savings-info-popover' : undefined;
+
+    // Handle error messages from navigation state
+    useEffect(() => {
+        if (location.state?.error) {
+            setErrorMessage(location.state.error);
+            // Clear error from location state to prevent it from showing again on refresh
+            window.history.replaceState({}, document.title);
+        }
+    }, [location.state]);
 
     useEffect(() => {
         if (location.state?.inputs) {
@@ -107,12 +170,37 @@ const InputPage = () => {
                 setTotalSavings('');
                 setDisplayTotalSavings('');
             }
+        } else {
+            // Try to load saved form data if no state from navigation
+            const savedData = loadFormFromStorage();
+            if (savedData) {
+                setEarnings(savedData.earnings || '');
+                setDisplayEarnings(formatCurrency(savedData.earnings));
+                setTotalSavings(savedData.totalSavings || '');
+                setDisplayTotalSavings(formatCurrency(savedData.totalSavings));
+                setSavingsGoals(savedData.savingsGoals || [{ amount: '', displayAmount: '', horizon: 0 }]);
+                setIsaAllowanceUsed(savedData.isaAllowanceUsed || 0);
+                setIsSimpleView(savedData.isSimpleView ?? true);
+                setShowAdvanced(savedData.showAdvanced || false);
+                setShowIsaSlider(savedData.showIsaSlider || false);
+            }
         }
     }, [location.state]);
+
+    // Auto-save form data when it changes
+    useEffect(() => {
+        if (formTouched) {
+            const timeoutId = setTimeout(() => {
+                saveFormToStorage();
+            }, 1000); // Save 1 second after user stops typing
+            return () => clearTimeout(timeoutId);
+        }
+    }, [earnings, totalSavings, savingsGoals, isaAllowanceUsed, isSimpleView, showAdvanced, showIsaSlider, formTouched, saveFormToStorage]);
 
     const handleEarningsChange = (e) => {
         const rawValue = e.target.value.replace(/[^0-9]/g, '');
         setEarnings(rawValue);
+        setFormTouched(true);
 
         if (rawValue) {
             const formattedValue = new Intl.NumberFormat('en-GB', {
@@ -130,6 +218,7 @@ const InputPage = () => {
     const handleTotalSavingsChange = (e) => {
         const rawValue = e.target.value.replace(/[^0-9]/g, '');
         setTotalSavings(rawValue);
+        setFormTouched(true);
 
         if (rawValue) {
             const formattedValue = new Intl.NumberFormat('en-GB', {
@@ -150,6 +239,8 @@ const InputPage = () => {
 
     const handleGoalChange = (index, event) => {
         const { name, value } = event.target;
+        setFormTouched(true);
+        
         const newGoals = savingsGoals.map((goal, i) => {
             if (i === index) {
                 if (name === 'amount') {
@@ -189,6 +280,27 @@ const InputPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // Validate form before submission
+        const earningsValidation = validateEarnings(earnings);
+        const savingsValidation = isSimpleView 
+            ? validateSavings(totalSavings, 'total savings amount')
+            : '';
+        
+        // Check savings goals validation in breakdown mode
+        let hasGoalErrors = false;
+        if (!isSimpleView) {
+            const goalErrors = savingsGoals.some(goal => {
+                const error = validateSavings(goal.amount, 'savings goal amount');
+                return error !== '';
+            });
+            hasGoalErrors = goalErrors;
+        }
+        
+        if (earningsValidation || savingsValidation || hasGoalErrors) {
+            return;
+        }
+        
         setLoading(true);
 
         // Prepare the data to pass to the loading page
@@ -222,26 +334,48 @@ const InputPage = () => {
     };
 
     return (
-        <Container maxWidth="md">
-            <Paper elevation={3} sx={{ my: { xs: 2, sm: 4 }, p: { xs: 2, sm: 4 }, borderRadius: 3 }}>
-                <Box sx={{ textAlign: 'center', mb: 4 }}>
-                    <DotLottieReact
-                        src="/animations/ThinkingCharts.lottie"
-                        loop
-                        autoplay
-                        style={{ height: '150px', width: '150px', margin: 'auto', marginBottom: '16px' }}
-                    />
-                    <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
+        <Container maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+            >
+                <Box sx={{ textAlign: 'center', mb: 6 }}>
+                    <Collapse in={!!errorMessage}>
+                        <Alert 
+                            severity="error" 
+                            onClose={() => setErrorMessage(null)}
+                            sx={{ mb: 3, textAlign: 'left' }}
+                        >
+                            <Typography variant="body2" component="div">
+                                <strong>Optimization failed:</strong> {errorMessage}
+                            </Typography>
+                        </Alert>
+                    </Collapse>
+                    <Typography 
+                        variant="h3" 
+                        component="h1" 
+                        gutterBottom 
+                        sx={{ 
+                            fontWeight: 700,
+                            color: '#2D1B4E',
+                            mb: 2,
+                            letterSpacing: '-0.02em'
+                        }}
+                    >
                         Just Save It.
                     </Typography>
-                    <Typography variant="h7" color="text.secondary">
+                    <Typography variant="body1" color="text.secondary" sx={{ maxWidth: '600px', mx: 'auto' }}>
                         No time to sort out your savings? Overwhelmed by your options? In a tangle over your tax? Intimidated by ISAs?
                     </Typography>
-                    <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
                         Answer these two questions and get your savings sorted.
                     </Typography>
                 </Box>
+
                 <form onSubmit={handleSubmit}>
+                    <Card sx={{ mb: 3, borderRadius: 3 }}>
+                        <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
                     <Popover
                         id={id}
                         open={open}
@@ -251,19 +385,26 @@ const InputPage = () => {
                             vertical: 'bottom',
                             horizontal: 'left',
                         }}
+                        PaperProps={{
+                            sx: {
+                                borderRadius: 3,
+                                boxShadow: '0 8px 32px rgba(155, 126, 222, 0.2)',
+                                border: '1px solid rgba(155, 126, 222, 0.2)',
+                            }
+                        }}
                     >
-                        <Box sx={{ p: 2, maxWidth: 400, border: '1px solid #ddd', borderRadius: '4px', boxShadow: 3 }}>
-                            <Typography variant="h6" gutterBottom>Don't Worry!</Typography>
-                            <Typography variant="body2" paragraph>
+                        <Box sx={{ p: 3, maxWidth: 400 }}>
+                            <Typography variant="h6" gutterBottom sx={{ color: '#2D1B4E', fontWeight: 600 }}>Don't Worry!</Typography>
+                            <Typography variant="body2" paragraph sx={{ color: '#6B5B8A' }}>
                                 A rough estimate is all we need! You only have to be accurate if you are near:
                             </Typography>
-                            <Typography variant="body2" paragraph>
+                            <Typography variant="body2" paragraph sx={{ color: '#6B5B8A' }}>
                                 <strong>£50,270 (when tax goes from 20% to 40%)</strong>
                             </Typography>
-                            <Typography variant="body2" paragraph>
+                            <Typography variant="body2" paragraph sx={{ color: '#6B5B8A' }}>
                                 <strong>£125,140 (when tax goes from 40% to 45%)</strong>
                             </Typography>
-                            <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
+                            <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#6B5B8A' }}>
                                 By earnings we mean your total income; salary, bonuses, dividends, rent receipts, etc. before tax.
                             </Typography>
                         </Box>
@@ -277,225 +418,302 @@ const InputPage = () => {
                             vertical: 'bottom',
                             horizontal: 'left',
                         }}
+                        PaperProps={{
+                            sx: {
+                                borderRadius: 3,
+                                boxShadow: '0 8px 32px rgba(155, 126, 222, 0.2)',
+                                border: '1px solid rgba(155, 126, 222, 0.2)',
+                            }
+                        }}
                     >
-                        <Box sx={{ p: 2, maxWidth: 400, border: '1px solid #ddd', borderRadius: '4px', boxShadow: 3 }}>
-                            <Typography variant="h6" gutterBottom>About Total Savings</Typography>
-                            <Typography variant="body2">
+                        <Box sx={{ p: 3, maxWidth: 400 }}>
+                            <Typography variant="h6" gutterBottom sx={{ color: '#2D1B4E', fontWeight: 600 }}>About Total Savings</Typography>
+                            <Typography variant="body2" sx={{ color: '#6B5B8A' }}>
                                 Please enter the amount you're looking to save. Don't include the money you can't access because its locked away.
                             </Typography>
                         </Box>
                     </Popover>
-                    <Typography variant="h5" sx={{ mt: 4, mb: 2, textAlign: 'center' }}>
+                    
+                    <Typography variant="h6" sx={{ mb: 3, color: '#2D1B4E', fontWeight: 600 }}>
                         Roughly how much...
                     </Typography>
-                    <TextField
-                        fullWidth
-                        label="...will you earn this tax year?"
-                        value={displayEarnings}
-                        onChange={handleEarningsChange}
-                        placeholder="e.g., £50,000"
-                        required
-                        variant="outlined"
-                        margin="normal"
-                        inputProps={{ inputMode: 'numeric' }}
-                        InputProps={{
-                            endAdornment: (
-                                <InputAdornment position="end">
-                                    <IconButton onClick={handleInfoClick} edge="end">
-                                        <InfoIcon />
-                                    </IconButton>
-                                </InputAdornment>
-                            ),
-                        }}
-                    />
+                    
+                    <motion.div
+                        whileHover={{ scale: 1.01 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        <TextField
+                            fullWidth
+                            label="...will you earn this tax year?"
+                            value={displayEarnings}
+                            onChange={handleEarningsChange}
+                            placeholder="e.g., £50,000"
+                            required
+                            variant="outlined"
+                            margin="normal"
+                            inputProps={{ inputMode: 'numeric' }}
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton 
+                                            onClick={handleInfoClick} 
+                                            edge="end"
+                                            sx={{ color: '#9B7EDE' }}
+                                        >
+                                            <InfoIcon />
+                                        </IconButton>
+                                    </InputAdornment>
+                                ),
+                            }}
+                            sx={{ mb: 3 }}
+                        />
+                    </motion.div>
 
                     {isSimpleView ? (
                         <>
-                            <TextField
-                                fullWidth
-                                label="...would you like to save?"
-                                value={displayTotalSavings}
-                                onChange={handleTotalSavingsChange}
-                                placeholder="e.g., £25,000"
-                                required
-                                variant="outlined"
-                                margin="normal"
-                                inputProps={{ inputMode: 'numeric' }}
-                                InputProps={{
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton onClick={handleSavingsInfoClick} edge="end">
-                                                <InfoIcon />
-                                            </IconButton>
-                                        </InputAdornment>
-                                    ),
-                                }}
-                            />
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1, mb: 2 }}>
+                            <motion.div
+                                whileHover={{ scale: 1.01 }}
+                                transition={{ duration: 0.2 }}
+                            >
+                                <TextField
+                                    fullWidth
+                                    label="...would you like to save?"
+                                    value={displayTotalSavings}
+                                    onChange={handleTotalSavingsChange}
+                                    placeholder="e.g., £25,000"
+                                    required
+                                    variant="outlined"
+                                    margin="normal"
+                                    inputProps={{ inputMode: 'numeric' }}
+                                    InputProps={{
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton 
+                                                    onClick={handleSavingsInfoClick} 
+                                                    edge="end"
+                                                    sx={{ color: '#9B7EDE' }}
+                                                >
+                                                    <InfoIcon />
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                    sx={{ mb: 3 }}
+                                />
+                            </motion.div>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
                                 <Button
                                     variant="outlined"
-                                    size="small"
+                                    size="medium"
                                     onClick={() => setIsSimpleView(false)}
+                                    sx={{ flex: 1, minWidth: '150px' }}
                                 >
                                     Savings Breakdown
                                 </Button>
                                 <Button
                                     variant="outlined"
-                                    size="small"
+                                    size="medium"
                                     onClick={handleFineTuneToggle}
+                                    sx={{ flex: 1, minWidth: '150px' }}
                                 >
-                                    {showFineTuneSection ? 'Hide Fine-tune Options' : 'Fine-tune Options'}
+                                    {showFineTuneSection ? 'Hide Fine-tune' : 'Fine-tune Options'}
                                 </Button>
                             </Box>
                         </>
                     ) : (
                         <>
-                            <Typography variant="h5" component="h2" sx={{ mt: 4, mb: 2 }}>
+                            <Typography variant="h6" component="h2" sx={{ mb: 3, color: '#2D1B4E', fontWeight: 600 }}>
                                 Savings Breakdown
                             </Typography>
                             {savingsGoals.map((goal, index) => (
-                                <Paper key={index} variant="outlined" sx={{ p: 2, mb: 2, position: 'relative', borderRadius: 2 }}>
-                                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, alignItems: 'center' }}>
-                                        <TextField
-                                            label="Amount to Save"
-                                            name="amount"
-                                            value={goal.displayAmount}
-                                            onChange={(e) => handleGoalChange(index, e)}
-                                            placeholder="e.g., £10,000"
-                                            required
-                                            sx={{ flexGrow: 1, width: '100%' }}
-                                            inputProps={{ inputMode: 'numeric' }}
-                                        />
-                                        <FormControl sx={{ minWidth: {sm: 180}, width: '100%' }}>
-                                            <InputLabel>Time Horizon</InputLabel>
-                                            <Select
-                                                name="horizon"
-                                                value={goal.horizon}
+                                <motion.div
+                                    key={index}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                                >
+                                    <Card 
+                                        variant="outlined" 
+                                        sx={{ 
+                                            p: 2.5, 
+                                            mb: 2, 
+                                            position: 'relative', 
+                                            borderRadius: 3,
+                                            border: '1px solid rgba(155, 126, 222, 0.2)',
+                                        }}
+                                    >
+                                        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, alignItems: { sm: 'center' } }}>
+                                            <TextField
+                                                label="Amount to Save"
+                                                name="amount"
+                                                value={goal.displayAmount}
                                                 onChange={(e) => handleGoalChange(index, e)}
-                                                label="Time Horizon"
-                                            >
-                                                {horizonOptions.map(option => (
-                                                    <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
-                                                ))}
-                                            </Select>
-                                        </FormControl>
-                                        {savingsGoals.length > 1 && (
-                                            <IconButton onClick={() => handleRemoveGoal(index)} color="secondary" sx={{ position: { xs: 'absolute', sm: 'static' }, top: 16, right: 8}}>
-                                                <RemoveCircleOutlineIcon />
-                                            </IconButton>
-                                        )}
-                                    </Box>
-                                </Paper>
+                                                placeholder="e.g., £10,000"
+                                                required
+                                                sx={{ flexGrow: 1 }}
+                                                inputProps={{ inputMode: 'numeric' }}
+                                            />
+                                            <FormControl sx={{ minWidth: {sm: 180}, width: { xs: '100%', sm: 'auto' } }}>
+                                                <InputLabel>Time Horizon</InputLabel>
+                                                <Select
+                                                    name="horizon"
+                                                    value={goal.horizon}
+                                                    onChange={(e) => handleGoalChange(index, e)}
+                                                    label="Time Horizon"
+                                                >
+                                                    {horizonOptions.map(option => (
+                                                        <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+                                                    ))}
+                                                </Select>
+                                            </FormControl>
+                                            {savingsGoals.length > 1 && (
+                                                <IconButton 
+                                                    onClick={() => handleRemoveGoal(index)} 
+                                                    sx={{ 
+                                                        color: '#9B7EDE',
+                                                        position: { xs: 'absolute', sm: 'static' }, 
+                                                        top: 16, 
+                                                        right: 8
+                                                    }}
+                                                >
+                                                    <RemoveCircleOutlineIcon />
+                                                </IconButton>
+                                            )}
+                                        </Box>
+                                    </Card>
+                                </motion.div>
                             ))}
-                            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
                                 <Button
                                     type="button"
                                     onClick={handleAddGoal}
                                     startIcon={<AddCircleOutlineIcon />}
+                                    variant="outlined"
                                 >
                                     Add Another Savings Goal
                                 </Button>
                             </Box>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1, mb: 2 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
                                 <Button
                                     variant="outlined"
-                                    size="small"
+                                    size="medium"
                                     onClick={() => setIsSimpleView(true)}
+                                    sx={{ flex: 1, minWidth: '150px' }}
                                 >
                                     Use Total Savings
                                 </Button>
                                 <Button
                                     variant="outlined"
-                                    size="small"
+                                    size="medium"
                                     onClick={handleFineTuneToggle}
+                                    sx={{ flex: 1, minWidth: '150px' }}
                                 >
-                                    {showFineTuneSection ? 'Hide Fine-tune Options' : 'Fine-tune Options'}
+                                    {showFineTuneSection ? 'Hide Fine-tune' : 'Fine-tune Options'}
                                 </Button>
                             </Box>
                         </>
                     )}
 
                     {showFineTuneSection && (
-                        <Box sx={{ mt: 3 }}>
-                            <Typography variant="h6" sx={{ mb: 2, fontWeight: 'medium' }}>
-                                Fine-tune Your Optimization
-                            </Typography>
-                            
-                            <Box sx={{ mb: 3 }}>
-                                <Typography id="isa-slider-label" gutterBottom sx={{ fontWeight: 'medium' }}>
-                                    ISA Allowance Used (£{isaAllowanceUsed.toLocaleString()})
-                                </Typography>
-                                <Box sx={{ px: 1 }}>
-                                    <Slider
-                                        aria-labelledby="isa-slider-label"
-                                        value={isaAllowanceUsed}
-                                        onChange={(e, newValue) => setIsaAllowanceUsed(newValue)}
-                                        valueLabelDisplay="auto"
-                                        step={500}
-                                        marks
-                                        min={0}
-                                        max={20000}
-                                    />
-                                </Box>
-                            </Box>
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            <Card sx={{ mt: 3, borderRadius: 3, border: '1px solid rgba(155, 126, 222, 0.2)' }}>
+                                <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
+                                    <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: '#2D1B4E' }}>
+                                        Fine-tune Your Optimization
+                                    </Typography>
+                                    
+                                    <Box sx={{ mb: 4 }}>
+                                        <Typography id="isa-slider-label" gutterBottom sx={{ fontWeight: 500, color: '#2D1B4E', mb: 2 }}>
+                                            ISA Allowance Used (£{isaAllowanceUsed.toLocaleString()})
+                                        </Typography>
+                                        <Box sx={{ px: 1 }}>
+                                            <Slider
+                                                aria-labelledby="isa-slider-label"
+                                                value={isaAllowanceUsed}
+                                                onChange={(e, newValue) => setIsaAllowanceUsed(newValue)}
+                                                valueLabelDisplay="auto"
+                                                step={500}
+                                                marks
+                                                min={0}
+                                                max={20000}
+                                                sx={{
+                                                    color: '#9B7EDE',
+                                                    '& .MuiSlider-thumb': {
+                                                        '&:hover': {
+                                                            boxShadow: '0 0 0 8px rgba(155, 126, 222, 0.16)',
+                                                        },
+                                                    },
+                                                }}
+                                            />
+                                        </Box>
+                                    </Box>
 
-                            <Box>
-                                <Typography id="savings-income-slider-label" gutterBottom sx={{ fontWeight: 'medium' }}>
-                                    Other Savings Income (£{otherSavingsIncome.toLocaleString()}{otherSavingsIncome >= 1000 ? ' or more' : ''})
-                                </Typography>
-                                <Box sx={{ px: 1 }}>
-                                    <Slider
-                                        aria-labelledby="savings-income-slider-label"
-                                        value={otherSavingsIncome}
-                                        onChange={(e, newValue) => setOtherSavingsIncome(newValue)}
-                                        valueLabelDisplay="auto"
-                                        step={50}
-                                        marks
-                                        min={0}
-                                        max={1000}
-                                    />
-                                </Box>
-                                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                                    Enter any savings interest you're already earning from other accounts
-                                </Typography>
-                            </Box>
-                        </Box>
+                                    <Box>
+                                        <Typography id="savings-income-slider-label" gutterBottom sx={{ fontWeight: 500, color: '#2D1B4E', mb: 2 }}>
+                                            Other Savings Income (£{otherSavingsIncome.toLocaleString()}{otherSavingsIncome >= 1000 ? ' or more' : ''})
+                                        </Typography>
+                                        <Box sx={{ px: 1 }}>
+                                            <Slider
+                                                aria-labelledby="savings-income-slider-label"
+                                                value={otherSavingsIncome}
+                                                onChange={(e, newValue) => setOtherSavingsIncome(newValue)}
+                                                valueLabelDisplay="auto"
+                                                step={50}
+                                                marks
+                                                min={0}
+                                                max={1000}
+                                                sx={{
+                                                    color: '#9B7EDE',
+                                                    '& .MuiSlider-thumb': {
+                                                        '&:hover': {
+                                                            boxShadow: '0 0 0 8px rgba(155, 126, 222, 0.16)',
+                                                        },
+                                                    },
+                                                }}
+                                            />
+                                        </Box>
+                                        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                                            Enter any savings interest you're already earning from other accounts
+                                        </Typography>
+                                    </Box>
+                                </CardContent>
+                            </Card>
+                        </motion.div>
                     )}
+                        </CardContent>
+                    </Card>
 
-                    <Box sx={{ mt: 3, position: 'relative' }}>
+                    <motion.div
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                    >
                         <Button
                             type="submit"
                             variant="contained"
-                            color="primary"
                             size="large"
                             fullWidth
                             disabled={loading}
                             sx={{
-                                backgroundColor: 'rgba(255,255,255,0.15)',
-                                color: '#fff',
-                                '&:hover': {
-                                    backgroundColor: 'rgba(255,255,255,0.25)',
-                                },
-                                boxShadow: 'none',
+                                mt: 3,
+                                py: 2,
+                                fontSize: '1.1rem',
+                                fontWeight: 600,
                             }}
                         >
-                            Optimise Savings
+                            {loading ? (
+                                <CircularProgress size={24} sx={{ color: '#FFFFFF' }} />
+                            ) : (
+                                'Optimise Savings'
+                            )}
                         </Button>
-                        {loading && (
-                            <CircularProgress
-                                size={24}
-                                sx={{
-                                    position: 'absolute',
-                                    top: '50%',
-                                    left: '50%',
-                                    marginTop: '-12px',
-                                    marginLeft: '-12px',
-                                }}
-                            />
-                        )}
-                    </Box>
+                    </motion.div>
                 </form>
-            </Paper>
+            </motion.div>
         </Container>
     );
 };

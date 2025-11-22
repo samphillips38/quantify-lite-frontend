@@ -3,34 +3,36 @@ import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-route
 import InputPage from './pages/InputPage';
 import LoadingPage from './pages/LoadingPage';
 import ResultsPage from './pages/ResultsPage';
+import ShareButton from './components/ShareButton';
+import { ShareProvider } from './contexts/ShareContext';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import GlobalStyles from '@mui/material/GlobalStyles';
-import theme from './theme';
+import defaultTheme from './theme';
 import { AnimatePresence, motion } from 'framer-motion';
 
 const pageVariants = {
   initial: {
     opacity: 0,
-    x: "-100vw",
-    scale: 0.8
+    y: 20,
+    scale: 0.98
   },
   in: {
     opacity: 1,
-    x: 0,
+    y: 0,
     scale: 1
   },
   out: {
     opacity: 0,
-    x: "100vw",
-    scale: 1.2
+    y: -20,
+    scale: 0.98
   }
 };
 
 const pageTransition = {
   type: "tween",
-  ease: "anticipate",
-  duration: 0.8
+  ease: [0.4, 0, 0.2, 1], // Custom cubic-bezier for smooth easing
+  duration: 0.5
 };
 
 const AnimatedRoutes = () => {
@@ -80,8 +82,24 @@ const backgroundGradient = (
   <GlobalStyles
     styles={{
       body: {
-        background: 'linear-gradient(to bottom, #2c0a4d, #8a4d80)',
+        background: 'linear-gradient(135deg, #F5F3FA 0%, #E8E3F5 50%, #F5F3FA 100%)',
         backgroundAttachment: 'fixed',
+        minHeight: '100vh',
+      },
+      '*': {
+        '&::-webkit-scrollbar': {
+          width: '8px',
+        },
+        '&::-webkit-scrollbar-track': {
+          background: 'rgba(155, 126, 222, 0.1)',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          background: 'rgba(155, 126, 222, 0.3)',
+          borderRadius: '4px',
+          '&:hover': {
+            background: 'rgba(155, 126, 222, 0.5)',
+          },
+        },
       },
     }}
   />
@@ -89,14 +107,17 @@ const backgroundGradient = (
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={defaultTheme}>
       <CssBaseline />
       {backgroundGradient}
-      <Router>
-        <div className="App">
-          <AnimatedRoutes />
-        </div>
-      </Router>
+      <ShareProvider>
+        <Router>
+          <div className="App">
+            <AnimatedRoutes />
+            <ShareButton />
+          </div>
+        </Router>
+      </ShareProvider>
     </ThemeProvider>
   );
 }

@@ -1,8 +1,47 @@
 import axios from 'axios';
 
+// Utility function to generate a UUID v4
+const generateUUID = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : ((r & 0x3) | 0x8);
+    return v.toString(16);
+  });
+};
+
+// Get or create session ID (persists across page reloads in the same browser session)
+export const getSessionId = () => {
+  const storageKey = 'quantifyLite_session_id';
+  let sessionId = sessionStorage.getItem(storageKey);
+  if (!sessionId) {
+    sessionId = generateUUID();
+    sessionStorage.setItem(storageKey, sessionId);
+  }
+  return sessionId;
+};
+
+// Get or create batch ID (gets replaced with a new one each time optimization runs)
+export const getBatchId = () => {
+  const storageKey = 'quantifyLite_batch_id';
+  let batchId = sessionStorage.getItem(storageKey);
+  if (!batchId) {
+    batchId = generateUUID();
+    sessionStorage.setItem(storageKey, batchId);
+  }
+  return batchId;
+};
+
+// Generate and store a new batch ID (replaces the existing one)
+export const setBatchId = () => {
+  const storageKey = 'quantifyLite_batch_id';
+  const newBatchId = generateUUID();
+  sessionStorage.setItem(storageKey, newBatchId);
+  return newBatchId;
+};
+
 // This is the public URL of your backend.
 // It is set at build time by Railway from the REACT_APP_API_URL environment variable.
-let API_BASE_URL = process.env.REACT_APP_API_URL || 'http://192.168.0.24:5001';
+let API_BASE_URL = process.env.REACT_APP_API_URL || 'http://172.20.10.2:5001';
 
 // In a production build, this variable MUST be set.
 // If it's not, the app will not be able to connect to the backend.
@@ -21,42 +60,7 @@ if (process.env.NODE_ENV === 'production') {
   }
 }
 
-const MOCK_DATA = {
-  "investments": [
-    {
-      "account_name": "Super Saver Account",
-      "amount": 5000.00,
-      "aer": 5.20,
-      "term": "1 Year",
-      "is_isa": true,
-      "url": "https://www.example.com/super-saver"
-    },
-    {
-      "account_name": "Flexible ISA",
-      "amount": 3000.00,
-      "aer": 4.80,
-      "term": "Easy access",
-      "is_isa": true,
-      "url": "https://www.example.com/flexible-isa"
-    },
-    {
-      "account_name": "High-Yield Bond",
-      "amount": 2000.00,
-      "aer": 6.50,
-      "term": "3 Years",
-      "is_isa": false,
-      "url": "https://www.example.com/high-yield"
-    }
-  ],
-  "total_return": 674.00,
-  "status": "Optimal"
-};
-
-export const optimiseSavings = async (data, useMockData = false) => {
-  if (useMockData) {
-    return Promise.resolve({ data: MOCK_DATA });
-  }
-
+export const optimiseSavings = async (data) => {
   // Use the production API URL or fallback to a local URL for development.
   const apiUrl = `${API_BASE_URL}/optimize`;
 
@@ -65,8 +69,31 @@ export const optimiseSavings = async (data, useMockData = false) => {
     return response;
   } catch (error) {
     console.error(`Error calling optimisation endpoint at ${apiUrl}:`, error);
-    alert("Could not connect to the backend. Using mock data for demonstration.");
-    return Promise.resolve({ data: MOCK_DATA });
+    
+    // Extract error message from the response if available
+    const errorMessage = error.response?.data?.error 
+      ? `Backend error: ${error.response.data.error}`
+      : error.response?.status 
+        ? `Backend returned status ${error.response.status}: ${error.response.statusText || 'Unknown error'}`
+        : error.message
+          ? `Network error: ${error.message}`
+          : 'Unknown error occurred while connecting to the backend';
+    
+    // Log detailed error information for debugging
+    console.error('Full error details:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      url: apiUrl,
+      config: error.config
+    });
+    
+    // Throw a descriptive error instead of returning mock data
+    const enhancedError = new Error(errorMessage);
+    enhancedError.originalError = error;
+    enhancedError.apiUrl = apiUrl;
+    throw enhancedError;
   }
 };
 
@@ -78,6 +105,18 @@ export const submitFeedback = async (feedbackData) => {
     return response.data;
   } catch (error) {
     console.error(`Error submitting feedback to ${apiUrl}:`, error);
+    throw error;
+  }
+};
+
+export const emailResults = async (emailData) => {
+  const apiUrl = `${API_BASE_URL}/email-results`;
+
+  try {
+    const response = await axios.post(apiUrl, emailData);
+    return response.data;
+  } catch (error) {
+    console.error(`Error sending email to ${apiUrl}:`, error);
     throw error;
   }
 }; 

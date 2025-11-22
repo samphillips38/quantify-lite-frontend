@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Card, CardContent, Typography, Box, Button, Popover, IconButton } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
@@ -28,6 +28,22 @@ const InputsCard = ({ inputs, isSimpleAnalysis, showIsaSlider }) => {
     const navigate = useNavigate();
     const [anchorEl, setAnchorEl] = React.useState(null);
     const [popoverIndex, setPopoverIndex] = React.useState(null);
+
+    const handleInfoClick = useCallback((event, idx) => {
+        setAnchorEl(event.currentTarget);
+        setPopoverIndex(idx);
+    }, []);
+    
+    const handlePopoverClose = useCallback(() => {
+        setAnchorEl(null);
+        setPopoverIndex(null);
+    }, []);
+    
+    const handleNavigateBack = useCallback(() => {
+        navigate('/', { state: { inputs, isSimpleAnalysis, showIsaSlider } });
+    }, [navigate, inputs, isSimpleAnalysis, showIsaSlider]);
+    
+    const open = Boolean(anchorEl);
 
     if (!inputs) {
         return null;
@@ -64,22 +80,12 @@ const InputsCard = ({ inputs, isSimpleAnalysis, showIsaSlider }) => {
         }] : [])
     ];
 
-    const handleInfoClick = (event, idx) => {
-        setAnchorEl(event.currentTarget);
-        setPopoverIndex(idx);
-    };
-    const handlePopoverClose = () => {
-        setAnchorEl(null);
-        setPopoverIndex(null);
-    };
-    const open = Boolean(anchorEl);
-
     return (
         <Card sx={{ mb: 4, borderRadius: 3 }}>
             <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
                 <Grid container spacing={2} justifyContent="center" sx={{ mt: 1 }}>
                     {inputItems.map((item, idx) => (
-                        <Grid item xs={12} sm={4} key={item.title}>
+                        <Grid size={{ xs: 12, sm: 4 }} key={item.title}>
                             <Box sx={{ textAlign: 'center', p: 1 }}>
                                 {item.icon}
                                 <Typography variant="h6" component="h3" sx={{ mt: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -89,7 +95,7 @@ const InputsCard = ({ inputs, isSimpleAnalysis, showIsaSlider }) => {
                                         onClick={e => handleInfoClick(e, idx)}
                                         sx={{ ml: 0.5, p: 0.5 }}
                                     >
-                                        <InfoOutlinedIcon sx={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.7)' }} />
+                                        <InfoOutlinedIcon sx={{ fontSize: '1rem', color: '#9B7EDE' }} />
                                     </IconButton>
                                     <Popover
                                         open={open && popoverIndex === idx}
@@ -97,9 +103,17 @@ const InputsCard = ({ inputs, isSimpleAnalysis, showIsaSlider }) => {
                                         onClose={handlePopoverClose}
                                         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
                                         transformOrigin={{ vertical: 'top', horizontal: 'center' }}
-                                        PaperProps={{ sx: { p: 2, maxWidth: 250 } }}
+                                        PaperProps={{ 
+                                            sx: { 
+                                                p: 2, 
+                                                maxWidth: 250,
+                                                borderRadius: 3,
+                                                boxShadow: '0 8px 32px rgba(155, 126, 222, 0.2)',
+                                                border: '1px solid rgba(155, 126, 222, 0.2)',
+                                            } 
+                                        }}
                                     >
-                                        <Typography variant="body2">{item.tooltip}</Typography>
+                                        <Typography variant="body2" sx={{ color: '#6B5B8A' }}>{item.tooltip}</Typography>
                                     </Popover>
                                 </Typography>
                                 {item.title === 'Savings Breakdown' ? (
@@ -127,7 +141,7 @@ const InputsCard = ({ inputs, isSimpleAnalysis, showIsaSlider }) => {
             </CardContent>
             <Box sx={{ p: 0, borderTop: 1, borderColor: 'divider', textAlign: 'center' }}>
                 <Button
-                    onClick={() => navigate('/', { state: { inputs, isSimpleAnalysis, showIsaSlider } })}
+                    onClick={handleNavigateBack}
                     fullWidth
                     disableElevation
                     variant="text"
