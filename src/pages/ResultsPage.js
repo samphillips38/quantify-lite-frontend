@@ -10,7 +10,7 @@ import InputsCard from '../components/InputsCard';
 import SimpleAnalysisSection from '../components/SimpleAnalysisSection';
 import InvestmentsSection from '../components/InvestmentsSection';
 import FeedbackSection from '../components/FeedbackSection';
-import { submitFeedback } from '../services/api';
+import { submitFeedback, getBatchId } from '../services/api';
 import { useShare } from '../contexts/ShareContext';
 import { motion } from 'framer-motion';
 
@@ -124,6 +124,7 @@ const ResultsPage = () => {
         const feedbackData = {
             optimization_record_id: resultsData.optimization_record_id,
             session_id: sessionId,  // Link feedback to the user session
+            batch_id: getBatchId(),  // Get batch_id from sessionStorage
             nps_score: parseInt(nps, 10),
             useful: useful,
             improvements: improvements || undefined,
@@ -304,7 +305,13 @@ const ResultsPage = () => {
                     </Typography>
                     <SummaryCard summary={summary} inputs={inputs} investments={investments} />
 
-                    <InvestmentsSection investments={investments} />
+                    <InvestmentsSection 
+                        investments={investments} 
+                        inputs={inputs} 
+                        summary={summary} 
+                        sessionId={sessionId}
+                        optimizationRecordId={resultsData?.optimization_record_id}
+                    />
 
                     <FeedbackSection
                         nps={nps}

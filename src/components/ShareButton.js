@@ -29,7 +29,7 @@ const ShareButton = () => {
     const open = Boolean(anchorEl);
 
     const appUrl = window.location.origin;
-    const shareText = "Check out Quantify Lite - a free tool to optimize your savings and maximize your returns! 🚀";
+    const shareText = "Check out Quantify - a free tool to optimize your savings and maximize your returns! 🚀";
 
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
@@ -88,7 +88,7 @@ const ShareButton = () => {
     };
 
     const handleEmail = () => {
-        const subject = encodeURIComponent('Check out Quantify Lite');
+        const subject = encodeURIComponent('Optimise your Savings');
         const body = encodeURIComponent(`${shareText}\n\n${appUrl}`);
         window.location.href = `mailto:?subject=${subject}&body=${body}`;
         handleClose();

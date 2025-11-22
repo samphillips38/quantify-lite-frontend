@@ -20,9 +20,23 @@ export const getSessionId = () => {
   return sessionId;
 };
 
-// Generate a new batch ID (for grouping bulk optimizations)
-export const generateBatchId = () => {
-  return generateUUID();
+// Get or create batch ID (gets replaced with a new one each time optimization runs)
+export const getBatchId = () => {
+  const storageKey = 'quantifyLite_batch_id';
+  let batchId = sessionStorage.getItem(storageKey);
+  if (!batchId) {
+    batchId = generateUUID();
+    sessionStorage.setItem(storageKey, batchId);
+  }
+  return batchId;
+};
+
+// Generate and store a new batch ID (replaces the existing one)
+export const setBatchId = () => {
+  const storageKey = 'quantifyLite_batch_id';
+  const newBatchId = generateUUID();
+  sessionStorage.setItem(storageKey, newBatchId);
+  return newBatchId;
 };
 
 // This is the public URL of your backend.
@@ -91,6 +105,18 @@ export const submitFeedback = async (feedbackData) => {
     return response.data;
   } catch (error) {
     console.error(`Error submitting feedback to ${apiUrl}:`, error);
+    throw error;
+  }
+};
+
+export const emailResults = async (emailData) => {
+  const apiUrl = `${API_BASE_URL}/email-results`;
+
+  try {
+    const response = await axios.post(apiUrl, emailData);
+    return response.data;
+  } catch (error) {
+    console.error(`Error sending email to ${apiUrl}:`, error);
     throw error;
   }
 }; 

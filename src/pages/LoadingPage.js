@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { optimiseSavings, getSessionId, generateBatchId } from '../services/api';
+import { optimiseSavings, getSessionId, setBatchId } from '../services/api';
 import {
     Container, Box, Typography, Button
 } from '@mui/material';
@@ -457,10 +457,10 @@ const LoadingPage = () => {
             try {
                 const { inputs, isSimpleAnalysis } = location.state;
                 const sessionId = getSessionId();
+                // Generate a new batch_id for this optimization run (replaces any existing one)
+                const batchId = setBatchId();
                 
                 if (isSimpleAnalysis) {
-                    // Generate a batch_id for this bulk optimization run
-                    const batchId = generateBatchId();
                     const horizonsToTest = [0, 6, 12, 36, 60];
                     const promises = horizonsToTest.map(horizon => {
                         const data = {
@@ -501,7 +501,7 @@ const LoadingPage = () => {
                         isa_allowance_used: inputs.isa_allowance_used,
                         other_savings_income: inputs.other_savings_income,
                         session_id: sessionId,
-                        // No batch_id for single optimizations
+                        batch_id: batchId,  // Include batch_id for single optimizations too
                     };
 
                     const result = await optimiseSavings(data);
