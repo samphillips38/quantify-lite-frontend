@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
     Box, Typography, Card, CardContent, CardActionArea, Chip, 
     Button, Dialog, DialogTitle, DialogContent, DialogActions, 
@@ -60,16 +60,15 @@ const InvestmentsSection = ({ investments, inputs, summary, sessionId, optimizat
         setIsSending(true);
 
         try {
-            const response = await emailResults({
+            await emailResults({
                 email: email.trim(),
-                inputs: inputs,
-                summary: summary,
-                investments: investments || [],
+                inputs,
+                summary,
+                investments,
                 session_id: sessionId,
                 optimization_record_id: optimizationRecordId,
-                batch_id: getBatchId()  // Get batch_id from sessionStorage
+                batch_id: getBatchId()
             });
-            // Accept both 200 (success) and 202 (accepted, processing) as success
             setEmailSuccess(true);
             setTimeout(() => {
                 setEmailDialogOpen(false);
