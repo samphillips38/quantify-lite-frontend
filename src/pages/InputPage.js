@@ -429,7 +429,7 @@ const InputPage = () => {
                         <Box sx={{ p: 3, maxWidth: 400 }}>
                             <Typography variant="h6" gutterBottom sx={{ color: '#2D1B4E', fontWeight: 600 }}>About Total Savings</Typography>
                             <Typography variant="body2" sx={{ color: '#6B5B8A' }}>
-                                Please enter the amount you're looking to save. Don't include the money you can't access because its locked away.
+                                Please enter the amount you're looking to save. Don't include the money you can't access because it's locked away.
                             </Typography>
                         </Box>
                     </Popover>

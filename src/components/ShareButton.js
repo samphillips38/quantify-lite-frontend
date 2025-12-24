@@ -126,7 +126,7 @@ const ShareButton = () => {
         if (navigator.share) {
             try {
                 await navigator.share({
-                    title: 'Quantify Lite',
+                    title: 'Quantify',
                     text: shareText,
                     url: appUrl,
                 });
