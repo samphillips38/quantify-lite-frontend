@@ -285,6 +285,32 @@ const ResultsPage = () => {
                         </Box>
                     </Popover>
 
+                    {/* Disclaimer Widget */}
+                    <Box sx={{ mb: 4, mt: 4 }}>
+                        <Card sx={{
+                            p: 2,
+                            borderRadius: 2,
+                            background: 'rgba(155, 126, 222, 0.05)',
+                            border: '1px solid rgba(155, 126, 222, 0.15)',
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: 1.5
+                        }}>
+                            <InfoOutlinedIcon sx={{ 
+                                fontSize: '1.25rem', 
+                                color: '#6B5B8A',
+                                mt: 0.25,
+                                flexShrink: 0
+                            }} />
+                            <Typography variant="body2" sx={{ 
+                                color: '#6B5B8A',
+                                lineHeight: 1.6
+                            }}>
+                                <strong>Please note:</strong> Variable rates are subject to change and could be higher or lower over time. These results assume that interest rates will remain constant for the duration of your investment period.
+                            </Typography>
+                        </Card>
+                    </Box>
+
                     <SimpleAnalysisSection
                         allResults={allResults}
                         isSimpleAnalysis={isSimpleAnalysis}
