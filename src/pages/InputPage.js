@@ -470,78 +470,79 @@ const InputPage = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
             >
-                <Alert 
-                    severity="error"
-                    icon={<WarningAmberIcon sx={{ fontSize: '1rem' }} />}
-                    sx={{ 
-                        mb: 4,
-                        borderRadius: 3,
-                        backgroundColor: 'rgba(211, 47, 47, 0.1)',
-                        border: '2px solid #d32f2f',
-                        color: '#2D1B4E',
-                        alignItems: 'center',
-                        py: 1,
-                        '& .MuiAlert-icon': {
-                            color: '#d32f2f',
-                            alignSelf: 'center',
-                            marginTop: 0,
-                        },
-                        '& .MuiAlert-message': {
-                            width: '100%',
-                            paddingTop: 0,
-                            paddingBottom: 0,
-                            paddingRight: 0,
-                            flex: 1,
-                        },
-                        '& .MuiAlert-action': {
-                            paddingLeft: 1,
-                            marginRight: 0,
-                        },
+                <Box
+                    onClick={handleBannerToggle}
+                    sx={{ cursor: 'pointer', mb: 4 }}
+                    aria-label={bannerExpanded ? 'Hide ISA limit refresh details' : 'Show ISA limit refresh details'}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleBannerToggle();
+                        }
                     }}
-                    action={
-                        <IconButton
-                            aria-label={bannerExpanded ? 'Hide ISA limit refresh details' : 'Show ISA limit refresh details'}
-                            aria-expanded={bannerExpanded}
-                            color="inherit"
-                            size="small"
-                            onClick={handleBannerToggle}
-                            sx={{ color: '#d32f2f', padding: '4px' }}
-                        >
-                            {bannerExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
-                        </IconButton>
-                    }
                 >
-                    <Box sx={{ width: '100%' }}>
-                        <Box sx={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            justifyContent: 'space-between',
-                            flexDirection: 'row',
-                            flexWrap: 'nowrap', 
-                            gap: 1,
-                            width: '100%',
-                            minWidth: 0
-                        }}>
-                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#2D1B4E', lineHeight: 1.4, fontSize: { xs: '0.7rem', sm: '0.875rem' }, textAlign: 'left', flex: '0 0 auto', minWidth: 0 }}>
-                                ISA Refresh in
-                            </Typography>
-                            <Box sx={{ flex: '0 0 auto', marginLeft: 'auto' }}>
-                                <CountdownDisplay countdown={countdown} />
+                    <Alert 
+                        severity="error"
+                        icon={<WarningAmberIcon sx={{ fontSize: '1rem' }} />}
+                        sx={{ 
+                            borderRadius: 3,
+                            backgroundColor: 'rgba(211, 47, 47, 0.1)',
+                            border: '2px solid #d32f2f',
+                            color: '#2D1B4E',
+                            alignItems: 'flex-start',
+                            py: 1,
+                            '& .MuiAlert-icon': {
+                                color: '#d32f2f',
+                                alignSelf: 'flex-start',
+                                marginTop: 0,
+                            },
+                            '& .MuiAlert-message': {
+                                width: '100%',
+                                paddingTop: 0,
+                                paddingBottom: 0,
+                                paddingRight: 0,
+                                flex: 1,
+                            },
+                        }}
+                    >
+                        <Box sx={{ width: '100%' }}>
+                            <Box sx={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'space-between',
+                                flexDirection: 'row',
+                                flexWrap: 'nowrap', 
+                                gap: 1,
+                                width: '100%',
+                                minWidth: 0,
+                                minHeight: '24px'
+                            }}>
+                                <Typography variant="body2" sx={{ fontWeight: 600, color: '#2D1B4E', lineHeight: 1.4, fontSize: { xs: '0.7rem', sm: '0.875rem' }, textAlign: 'left', flex: '0 0 auto', minWidth: 0 }}>
+                                    ISA Refresh in
+                                </Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: '0 0 auto' }}>
+                                    <Box sx={{ flex: '0 0 auto' }}>
+                                        <CountdownDisplay countdown={countdown} />
+                                    </Box>
+                                    {bannerExpanded ? <ExpandLessIcon fontSize="small" sx={{ color: '#d32f2f' }} /> : <ExpandMoreIcon fontSize="small" sx={{ color: '#d32f2f' }} />}
+                                </Box>
                             </Box>
+                            
+                            <Collapse in={bannerExpanded}>
+                                <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid rgba(211, 47, 47, 0.2)' }}>
+                                    <Typography variant="body2" sx={{ mb: 2, color: '#6B5B8A', lineHeight: 1.6 }}>
+                                        Your ISA allowance resets annually on <strong>April 6th</strong>, the start of the new tax year. Any unused allowance from the current tax year cannot be carried forward.
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ mb: 2, color: '#d32f2f', fontWeight: 600, lineHeight: 1.6 }}>
+                                        Use this tool to optimize your savings and make the most of your current tax-free ISA allowance before it expires.
+                                    </Typography>
+                                </Box>
+                            </Collapse>
                         </Box>
-                        
-                        <Collapse in={bannerExpanded}>
-                            <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid rgba(211, 47, 47, 0.2)' }}>
-                                <Typography variant="body2" sx={{ mb: 2, color: '#6B5B8A', lineHeight: 1.6 }}>
-                                    Your ISA allowance resets annually on <strong>April 6th</strong>, the start of the new tax year. Any unused allowance from the current tax year cannot be carried forward.
-                                </Typography>
-                                <Typography variant="body2" sx={{ mb: 2, color: '#d32f2f', fontWeight: 600, lineHeight: 1.6 }}>
-                                    Use this tool to optimize your savings and make the most of your current tax-free ISA allowance before it refreshes.
-                                </Typography>
-                            </Box>
-                        </Collapse>
-                    </Box>
-                </Alert>
+                    </Alert>
+                </Box>
             </motion.div>
 
             <motion.div
