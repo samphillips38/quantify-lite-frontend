@@ -29,7 +29,7 @@ const ShareButton = () => {
     const open = Boolean(anchorEl);
 
     const appUrl = window.location.origin;
-    const shareText = "Most people are winging it with ISAs and savings; Quantify is an app that actually runs the numbers and tells you what to do. Send it to friends to help them squeezing more from their savings🚀";
+    const shareText = "Share this with friends to stop winging it with ISAs and savings; Quantify uses your tax and savings goals, actually runs the numbers, and tells you exactly what to do!🚀";
 
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
