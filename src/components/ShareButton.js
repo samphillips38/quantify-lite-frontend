@@ -30,7 +30,8 @@ const ShareButton = () => {
     const open = Boolean(anchorEl);
 
     const appUrl = window.location.origin;
-    const shareText = "Share this with friends to stop winging it with ISAs and savings; Quantify uses your tax and savings goals, actually runs the numbers, and tells you exactly what to do!🚀";
+    const shareTextPlain = "Share this with friends to stop winging it with ISAs and savings; Quantify uses your savings goals and tax rate, crunches the numbers, and tells you exactly what to do... in 30 seconds!🚀";
+    const shareText = shareTextPlain.replace(/\bQuantify\b/g, '*Quantify*');
 
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
@@ -90,7 +91,7 @@ const ShareButton = () => {
 
     const handleEmail = () => {
         const subject = encodeURIComponent('Optimise your Savings');
-        const body = encodeURIComponent(`${shareText}\n\n${appUrl}`);
+        const body = encodeURIComponent(`${shareTextPlain}\n\n${appUrl}`);
         window.location.href = `mailto:?subject=${subject}&body=${body}`;
         handleClose();
     };
@@ -102,7 +103,7 @@ const ShareButton = () => {
     };
 
     const handleX = () => {
-        const url = `https://x.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(appUrl)}`;
+        const url = `https://x.com/intent/tweet?text=${encodeURIComponent(shareTextPlain)}&url=${encodeURIComponent(appUrl)}`;
         window.open(url, '_blank', 'width=600,height=400');
         handleClose();
     };
@@ -155,7 +156,7 @@ const ShareButton = () => {
             try {
                 await navigator.share({
                     title: 'Quantify',
-                    text: shareText,
+                    text: shareTextPlain,
                     url: appUrl,
                 });
                 handleClose();
