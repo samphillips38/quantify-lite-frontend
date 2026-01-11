@@ -25,8 +25,27 @@ const horizonOptions = [
     { value: 60, label: '5 years' }
 ];
 
-// Constants for ISA banner
-const ISA_LIMIT_CHANGE_DATE = '2027-04-06T00:00:00+01:00'; // UK timezone
+// Function to calculate the next ISA limit refresh date (April 6th)
+const getNextIsaRefreshDate = () => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth(); // 0-11 (January is 0)
+    const currentDay = now.getDate();
+    
+    // Create date for April 6th of current year (month 3 = April, day 6)
+    const april6ThisYear = new Date(currentYear, 3, 6, 0, 0, 0);
+    
+    // If we're before April 6th this year, use this year's date
+    // Otherwise, use next year's April 6th
+    if (currentMonth < 3 || (currentMonth === 3 && currentDay < 6)) {
+        // Before April 6th, use this year
+        return april6ThisYear.toISOString();
+    } else {
+        // On or after April 6th, use next year
+        const april6NextYear = new Date(currentYear + 1, 3, 6, 0, 0, 0);
+        return april6NextYear.toISOString();
+    }
+};
 
 // Custom hook for countdown timer
 const useCountdown = (targetDate) => {
@@ -74,7 +93,7 @@ const CountdownDisplay = ({ countdown }) => {
             sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flex: '0 0 auto' }}
             role="timer"
             aria-live="polite"
-            aria-label="Time remaining until ISA limit change"
+            aria-label="Time remaining until ISA limit refresh"
         >
             {countdownItems.map((item, index) => (
                 <React.Fragment key={item.label}>
@@ -142,8 +161,9 @@ const InputPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     
-    // Use custom countdown hook
-    const countdown = useCountdown(ISA_LIMIT_CHANGE_DATE);
+    // Calculate next ISA refresh date and use custom countdown hook
+    const nextIsaRefreshDate = useMemo(() => getNextIsaRefreshDate(), []);
+    const countdown = useCountdown(nextIsaRefreshDate);
     
     // Memoize toggle handler
     const handleBannerToggle = useCallback(() => {
@@ -480,7 +500,7 @@ const InputPage = () => {
                     }}
                     action={
                         <IconButton
-                            aria-label={bannerExpanded ? 'Hide ISA limit details' : 'Show ISA limit details'}
+                            aria-label={bannerExpanded ? 'Hide ISA limit refresh details' : 'Show ISA limit refresh details'}
                             aria-expanded={bannerExpanded}
                             color="inherit"
                             size="small"
@@ -503,7 +523,7 @@ const InputPage = () => {
                             minWidth: 0
                         }}>
                             <Typography variant="body2" sx={{ fontWeight: 600, color: '#2D1B4E', lineHeight: 1.4, fontSize: { xs: '0.7rem', sm: '0.875rem' }, textAlign: 'left', flex: '0 0 auto', minWidth: 0 }}>
-                                New ISA Limit
+                                ISA Refresh in
                             </Typography>
                             <Box sx={{ flex: '0 0 auto', marginLeft: 'auto' }}>
                                 <CountdownDisplay countdown={countdown} />
@@ -513,13 +533,10 @@ const InputPage = () => {
                         <Collapse in={bannerExpanded}>
                             <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid rgba(211, 47, 47, 0.2)' }}>
                                 <Typography variant="body2" sx={{ mb: 2, color: '#6B5B8A', lineHeight: 1.6 }}>
-                                    <strong>URGENT:</strong> Chancellor Rachel Reeves announced in the Autumn Budget 2025 that the annual cash ISA allowance will be reduced from £20,000 to £12,000 starting <strong>April 6, 2027</strong>.
+                                    Your ISA allowance resets annually on <strong>April 6th</strong>, the start of the new tax year. Any unused allowance from the current tax year cannot be carried forward.
                                 </Typography>
                                 <Typography variant="body2" sx={{ mb: 2, color: '#d32f2f', fontWeight: 600, lineHeight: 1.6 }}>
-                                    Act now to optimize your savings before the new limits come into effect. Use this tool to maximize your tax-free returns!
-                                </Typography>
-                                <Typography variant="body2" sx={{ color: '#6B5B8A', fontSize: '0.75rem', fontStyle: 'italic' }}>
-                                    Note: Individuals aged 65 and over will retain the full £20,000 cash ISA limit.
+                                    Use this tool to optimize your savings and make the most of your current tax-free ISA allowance before it refreshes.
                                 </Typography>
                             </Box>
                         </Collapse>
