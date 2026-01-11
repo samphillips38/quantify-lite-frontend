@@ -377,7 +377,7 @@ const InputPage = () => {
             >
                 <Alert 
                     severity="error"
-                    icon={<WarningAmberIcon />}
+                    icon={<WarningAmberIcon sx={{ fontSize: '1rem' }} />}
                     sx={{ 
                         mb: 4,
                         borderRadius: 3,
@@ -385,6 +385,7 @@ const InputPage = () => {
                         border: '2px solid #d32f2f',
                         color: '#2D1B4E',
                         alignItems: 'center',
+                        py: 1,
                         '& .MuiAlert-icon': {
                             color: '#d32f2f',
                             alignSelf: 'center',
@@ -402,50 +403,50 @@ const InputPage = () => {
                             color="inherit"
                             size="small"
                             onClick={() => setBannerExpanded(!bannerExpanded)}
-                            sx={{ color: '#d32f2f' }}
+                            sx={{ color: '#d32f2f', padding: '4px' }}
                         >
-                            {bannerExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                            {bannerExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
                         </IconButton>
                     }
                 >
                     <Box sx={{ width: '100%' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
-                            <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#2D1B4E', lineHeight: 1.5 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
+                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#2D1B4E', lineHeight: 1.4, fontSize: '0.875rem' }}>
                                 New ISA Limit Coming Soon
                             </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                                 <Box sx={{ textAlign: 'center' }}>
-                                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#d32f2f', lineHeight: 1.2 }}>
+                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', lineHeight: 1.2, fontSize: '0.875rem' }}>
                                         {countdown.days}
                                     </Typography>
-                                    <Typography variant="caption" sx={{ color: '#d32f2f', textTransform: 'uppercase', fontSize: '0.65rem', letterSpacing: 0.5 }}>
+                                    <Typography variant="caption" sx={{ color: '#d32f2f', textTransform: 'uppercase', fontSize: '0.55rem', letterSpacing: 0.5 }}>
                                         Days
                                     </Typography>
                                 </Box>
-                                <Typography variant="h6" sx={{ fontWeight: 700, color: '#d32f2f' }}>:</Typography>
+                                <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', fontSize: '0.875rem' }}>:</Typography>
                                 <Box sx={{ textAlign: 'center' }}>
-                                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#d32f2f', lineHeight: 1.2 }}>
+                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', lineHeight: 1.2, fontSize: '0.875rem' }}>
                                         {String(countdown.hours).padStart(2, '0')}
                                     </Typography>
-                                    <Typography variant="caption" sx={{ color: '#d32f2f', textTransform: 'uppercase', fontSize: '0.65rem', letterSpacing: 0.5 }}>
+                                    <Typography variant="caption" sx={{ color: '#d32f2f', textTransform: 'uppercase', fontSize: '0.55rem', letterSpacing: 0.5 }}>
                                         Hours
                                     </Typography>
                                 </Box>
-                                <Typography variant="h6" sx={{ fontWeight: 700, color: '#d32f2f' }}>:</Typography>
+                                <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', fontSize: '0.875rem' }}>:</Typography>
                                 <Box sx={{ textAlign: 'center' }}>
-                                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#d32f2f', lineHeight: 1.2 }}>
+                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', lineHeight: 1.2, fontSize: '0.875rem' }}>
                                         {String(countdown.minutes).padStart(2, '0')}
                                     </Typography>
-                                    <Typography variant="caption" sx={{ color: '#d32f2f', textTransform: 'uppercase', fontSize: '0.65rem', letterSpacing: 0.5 }}>
+                                    <Typography variant="caption" sx={{ color: '#d32f2f', textTransform: 'uppercase', fontSize: '0.55rem', letterSpacing: 0.5 }}>
                                         Minutes
                                     </Typography>
                                 </Box>
-                                <Typography variant="h6" sx={{ fontWeight: 700, color: '#d32f2f' }}>:</Typography>
+                                <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', fontSize: '0.875rem' }}>:</Typography>
                                 <Box sx={{ textAlign: 'center' }}>
-                                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#d32f2f', lineHeight: 1.2 }}>
+                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', lineHeight: 1.2, fontSize: '0.875rem' }}>
                                         {String(countdown.seconds).padStart(2, '0')}
                                     </Typography>
-                                    <Typography variant="caption" sx={{ color: '#d32f2f', textTransform: 'uppercase', fontSize: '0.65rem', letterSpacing: 0.5 }}>
+                                    <Typography variant="caption" sx={{ color: '#d32f2f', textTransform: 'uppercase', fontSize: '0.55rem', letterSpacing: 0.5 }}>
                                         Seconds
                                     </Typography>
                                 </Box>
