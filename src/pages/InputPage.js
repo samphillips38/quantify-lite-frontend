@@ -536,7 +536,7 @@ const InputPage = () => {
                                         Your ISA allowance resets annually on <strong>April 6th</strong>, the start of the new tax year. Any unused allowance from the current tax year cannot be carried forward.
                                     </Typography>
                                     <Typography variant="body2" sx={{ mb: 2, color: '#d32f2f', fontWeight: 600, lineHeight: 1.6 }}>
-                                        Use this tool to optimize your savings and make the most of your current tax-free ISA allowance before it refreshes.
+                                        Use this tool to optimize your savings and make the most of your current tax-free ISA allowance before it expires.
                                     </Typography>
                                 </Box>
                             </Collapse>
