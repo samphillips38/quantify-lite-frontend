@@ -410,43 +410,51 @@ const InputPage = () => {
                     }
                 >
                     <Box sx={{ width: '100%' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
-                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#2D1B4E', lineHeight: 1.4, fontSize: '0.875rem' }}>
-                                New ISA Limit Coming Soon
+                        <Box sx={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'space-between',
+                            flexDirection: 'row',
+                            flexWrap: 'nowrap', 
+                            gap: 1,
+                            width: '100%'
+                        }}>
+                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#2D1B4E', lineHeight: 1.4, fontSize: { xs: '0.7rem', sm: '0.875rem' }, textAlign: 'left', flex: '0 0 auto' }}>
+                                New ISA Limit
                             </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flex: '0 0 auto', marginLeft: 'auto' }}>
                                 <Box sx={{ textAlign: 'center' }}>
-                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', lineHeight: 1.2, fontSize: '0.875rem' }}>
+                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', lineHeight: 1, fontSize: { xs: '0.7rem', sm: '0.875rem' }, mb: 0.25 }}>
                                         {countdown.days}
                                     </Typography>
-                                    <Typography variant="caption" sx={{ color: '#d32f2f', textTransform: 'uppercase', fontSize: '0.55rem', letterSpacing: 0.5 }}>
+                                    <Typography variant="caption" sx={{ color: '#d32f2f', textTransform: 'uppercase', fontSize: { xs: '0.4rem', sm: '0.55rem' }, letterSpacing: 0.5, display: 'block' }}>
                                         Days
                                     </Typography>
                                 </Box>
-                                <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', fontSize: '0.875rem' }}>:</Typography>
+                                <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', fontSize: { xs: '0.7rem', sm: '0.875rem' } }}>:</Typography>
                                 <Box sx={{ textAlign: 'center' }}>
-                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', lineHeight: 1.2, fontSize: '0.875rem' }}>
+                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', lineHeight: 1, fontSize: { xs: '0.7rem', sm: '0.875rem' }, mb: 0.25 }}>
                                         {String(countdown.hours).padStart(2, '0')}
                                     </Typography>
-                                    <Typography variant="caption" sx={{ color: '#d32f2f', textTransform: 'uppercase', fontSize: '0.55rem', letterSpacing: 0.5 }}>
+                                    <Typography variant="caption" sx={{ color: '#d32f2f', textTransform: 'uppercase', fontSize: { xs: '0.4rem', sm: '0.55rem' }, letterSpacing: 0.5, display: 'block' }}>
                                         Hours
                                     </Typography>
                                 </Box>
-                                <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', fontSize: '0.875rem' }}>:</Typography>
+                                <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', fontSize: { xs: '0.7rem', sm: '0.875rem' } }}>:</Typography>
                                 <Box sx={{ textAlign: 'center' }}>
-                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', lineHeight: 1.2, fontSize: '0.875rem' }}>
+                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', lineHeight: 1, fontSize: { xs: '0.7rem', sm: '0.875rem' }, mb: 0.25 }}>
                                         {String(countdown.minutes).padStart(2, '0')}
                                     </Typography>
-                                    <Typography variant="caption" sx={{ color: '#d32f2f', textTransform: 'uppercase', fontSize: '0.55rem', letterSpacing: 0.5 }}>
+                                    <Typography variant="caption" sx={{ color: '#d32f2f', textTransform: 'uppercase', fontSize: { xs: '0.4rem', sm: '0.55rem' }, letterSpacing: 0.5, display: 'block' }}>
                                         Minutes
                                     </Typography>
                                 </Box>
-                                <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', fontSize: '0.875rem' }}>:</Typography>
+                                <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', fontSize: { xs: '0.7rem', sm: '0.875rem' } }}>:</Typography>
                                 <Box sx={{ textAlign: 'center' }}>
-                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', lineHeight: 1.2, fontSize: '0.875rem' }}>
+                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', lineHeight: 1, fontSize: { xs: '0.7rem', sm: '0.875rem' }, mb: 0.25 }}>
                                         {String(countdown.seconds).padStart(2, '0')}
                                     </Typography>
-                                    <Typography variant="caption" sx={{ color: '#d32f2f', textTransform: 'uppercase', fontSize: '0.55rem', letterSpacing: 0.5 }}>
+                                    <Typography variant="caption" sx={{ color: '#d32f2f', textTransform: 'uppercase', fontSize: { xs: '0.4rem', sm: '0.55rem' }, letterSpacing: 0.5, display: 'block' }}>
                                         Seconds
                                     </Typography>
                                 </Box>
