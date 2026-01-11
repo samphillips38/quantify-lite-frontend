@@ -8,6 +8,9 @@ import {
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import InfoIcon from '@mui/icons-material/Info';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { motion } from 'framer-motion';
 
 
@@ -39,6 +42,8 @@ const InputPage = () => {
     const [showFineTuneSection, setShowFineTuneSection] = useState(false);
     const [formTouched, setFormTouched] = useState(false);
     const [errorMessage, setErrorMessage] = useState(null);
+    const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+    const [bannerExpanded, setBannerExpanded] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -197,6 +202,35 @@ const InputPage = () => {
         }
     }, [earnings, totalSavings, savingsGoals, isaAllowanceUsed, isSimpleView, showAdvanced, showIsaSlider, formTouched, saveFormToStorage]);
 
+    // Countdown timer for ISA limit change (April 6, 2027)
+    useEffect(() => {
+        const targetDate = new Date('2027-04-06T00:00:00+01:00').getTime(); // UK timezone
+        
+        const updateCountdown = () => {
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+
+            if (distance > 0) {
+                setCountdown({
+                    days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+                    hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+                    minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+                    seconds: Math.floor((distance % (1000 * 60)) / 1000)
+                });
+            } else {
+                setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+            }
+        };
+
+        // Update immediately
+        updateCountdown();
+
+        // Update every second
+        const interval = setInterval(updateCountdown, 1000);
+
+        return () => clearInterval(interval);
+    }, []);
+
     const handleEarningsChange = (e) => {
         const rawValue = e.target.value.replace(/[^0-9]/g, '');
         setEarnings(rawValue);
@@ -335,6 +369,106 @@ const InputPage = () => {
 
     return (
         <Container maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
+            {/* Countdown Banner */}
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+            >
+                <Alert 
+                    severity="error"
+                    icon={<WarningAmberIcon />}
+                    sx={{ 
+                        mb: 4,
+                        borderRadius: 3,
+                        backgroundColor: 'rgba(211, 47, 47, 0.1)',
+                        border: '2px solid #d32f2f',
+                        color: '#2D1B4E',
+                        alignItems: 'center',
+                        '& .MuiAlert-icon': {
+                            color: '#d32f2f',
+                            alignSelf: 'center',
+                            marginTop: 0,
+                        },
+                        '& .MuiAlert-message': {
+                            width: '100%',
+                            paddingTop: 0,
+                            paddingBottom: 0,
+                        },
+                    }}
+                    action={
+                        <IconButton
+                            aria-label="info"
+                            color="inherit"
+                            size="small"
+                            onClick={() => setBannerExpanded(!bannerExpanded)}
+                            sx={{ color: '#d32f2f' }}
+                        >
+                            {bannerExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                        </IconButton>
+                    }
+                >
+                    <Box sx={{ width: '100%' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#2D1B4E', lineHeight: 1.5 }}>
+                                New ISA Limit Coming Soon
+                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                <Box sx={{ textAlign: 'center' }}>
+                                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#d32f2f', lineHeight: 1.2 }}>
+                                        {countdown.days}
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ color: '#d32f2f', textTransform: 'uppercase', fontSize: '0.65rem', letterSpacing: 0.5 }}>
+                                        Days
+                                    </Typography>
+                                </Box>
+                                <Typography variant="h6" sx={{ fontWeight: 700, color: '#d32f2f' }}>:</Typography>
+                                <Box sx={{ textAlign: 'center' }}>
+                                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#d32f2f', lineHeight: 1.2 }}>
+                                        {String(countdown.hours).padStart(2, '0')}
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ color: '#d32f2f', textTransform: 'uppercase', fontSize: '0.65rem', letterSpacing: 0.5 }}>
+                                        Hours
+                                    </Typography>
+                                </Box>
+                                <Typography variant="h6" sx={{ fontWeight: 700, color: '#d32f2f' }}>:</Typography>
+                                <Box sx={{ textAlign: 'center' }}>
+                                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#d32f2f', lineHeight: 1.2 }}>
+                                        {String(countdown.minutes).padStart(2, '0')}
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ color: '#d32f2f', textTransform: 'uppercase', fontSize: '0.65rem', letterSpacing: 0.5 }}>
+                                        Minutes
+                                    </Typography>
+                                </Box>
+                                <Typography variant="h6" sx={{ fontWeight: 700, color: '#d32f2f' }}>:</Typography>
+                                <Box sx={{ textAlign: 'center' }}>
+                                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#d32f2f', lineHeight: 1.2 }}>
+                                        {String(countdown.seconds).padStart(2, '0')}
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ color: '#d32f2f', textTransform: 'uppercase', fontSize: '0.65rem', letterSpacing: 0.5 }}>
+                                        Seconds
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </Box>
+                        
+                        <Collapse in={bannerExpanded}>
+                            <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid rgba(211, 47, 47, 0.2)' }}>
+                                <Typography variant="body2" sx={{ mb: 2, color: '#6B5B8A', lineHeight: 1.6 }}>
+                                    <strong>URGENT:</strong> Chancellor Rachel Reeves announced in the Autumn Budget 2025 that the annual cash ISA allowance will be reduced from £20,000 to £12,000 starting <strong>April 6, 2027</strong>.
+                                </Typography>
+                                <Typography variant="body2" sx={{ mb: 2, color: '#d32f2f', fontWeight: 600, lineHeight: 1.6 }}>
+                                    Act now to optimize your savings before the new limits come into effect. Use this tool to maximize your tax-free returns!
+                                </Typography>
+                                <Typography variant="body2" sx={{ color: '#6B5B8A', fontSize: '0.75rem', fontStyle: 'italic' }}>
+                                    Note: Individuals aged 65 and over will retain the full £20,000 cash ISA limit.
+                                </Typography>
+                            </Box>
+                        </Collapse>
+                    </Box>
+                </Alert>
+            </motion.div>
+
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
