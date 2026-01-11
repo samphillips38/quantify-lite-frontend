@@ -17,6 +17,7 @@ import EmailIcon from '@mui/icons-material/Email';
 import LinkIcon from '@mui/icons-material/Link';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import CloseIcon from '@mui/icons-material/Close';
+import BookmarkAddIcon from '@mui/icons-material/BookmarkAdd';
 import IconButton from '@mui/material/IconButton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useShare } from '../contexts/ShareContext';
@@ -103,6 +104,33 @@ const ShareButton = () => {
     const handleX = () => {
         const url = `https://x.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(appUrl)}`;
         window.open(url, '_blank', 'width=600,height=400');
+        handleClose();
+    };
+
+    const handleBookmark = () => {
+        // Try to use the bookmark API if available (Chrome/Edge)
+        if (window.sidebar && window.sidebar.addPanel) {
+            // Firefox
+            window.sidebar.addPanel(document.title, appUrl, '');
+            showSnackbar('Bookmark added!');
+        } else if (window.external && ('AddFavorite' in window.external)) {
+            // Internet Explorer
+            window.external.AddFavorite(appUrl, document.title);
+            showSnackbar('Bookmark added!');
+        } else if (window.chrome && window.chrome.bookmarks) {
+            // Chrome extension API (requires extension permission)
+            window.chrome.bookmarks.create({
+                title: document.title,
+                url: appUrl
+            }, () => {
+                showSnackbar('Bookmark added!');
+            });
+        } else {
+            // Fallback: Show instructions for manual bookmarking
+            const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+            const shortcut = isMac ? 'Cmd+D' : 'Ctrl+D';
+            showSnackbar(`Press ${shortcut} to bookmark this page, or use your browser's menu`);
+        }
         handleClose();
     };
 
@@ -311,6 +339,12 @@ const ShareButton = () => {
                         <XIcon fontSize="small" sx={{ color: '#000000' }} />
                     </ListItemIcon>
                     <ListItemText>X (Twitter)</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={handleBookmark}>
+                    <ListItemIcon>
+                        <BookmarkAddIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>Add to Bookmarks</ListItemText>
                 </MenuItem>
             </Menu>
 
