@@ -81,10 +81,17 @@ const AnimatedRoutes = () => {
 const backgroundGradient = (
   <GlobalStyles
     styles={{
+      html: {
+        overflowX: 'hidden',
+        maxWidth: '100vw',
+      },
       body: {
         background: 'linear-gradient(135deg, #F5F3FA 0%, #E8E3F5 50%, #F5F3FA 100%)',
         backgroundAttachment: 'fixed',
         minHeight: '100vh',
+        overflowX: 'hidden',
+        maxWidth: '100vw',
+        width: '100%',
       },
       '*': {
         '&::-webkit-scrollbar': {
@@ -112,7 +119,14 @@ function App() {
       {backgroundGradient}
       <ShareProvider>
         <Router>
-          <div className="App">
+          <div 
+            className="App"
+            style={{
+              width: '100%',
+              maxWidth: '100vw',
+              overflowX: 'hidden',
+            }}
+          >
             <AnimatedRoutes />
             <ShareButton />
           </div>
