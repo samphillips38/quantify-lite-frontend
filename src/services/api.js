@@ -41,7 +41,8 @@ export const setBatchId = () => {
 
 // This is the public URL of your backend.
 // It is set at build time by Railway from the REACT_APP_API_URL environment variable.
-let API_BASE_URL = process.env.REACT_APP_API_URL || 'http://192.168.0.46:5001';
+// For local development, default to localhost (works on any network)
+let API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
 
 // In a production build, this variable MUST be set.
 // If it's not, the app will not be able to connect to the backend.
