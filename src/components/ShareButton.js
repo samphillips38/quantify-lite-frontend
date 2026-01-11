@@ -31,7 +31,7 @@ const ShareButton = () => {
 
     const appUrl = window.location.origin;
     const shareTextPlain = "Share this with friends to stop winging it with ISAs and savings; Quantify uses your savings goals and tax rate, crunches the numbers, and tells you exactly what to do... in 30 seconds!🚀";
-    const shareText = shareTextPlain.replace(/\bQuantify\b/g, '**Quantify**');
+    const shareText = shareTextPlain.replace(/\bQuantify\b/g, '*Quantify*');
 
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
