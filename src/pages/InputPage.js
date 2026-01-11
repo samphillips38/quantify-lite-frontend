@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Container, Box, Typography, TextField, Button,
@@ -25,6 +25,102 @@ const horizonOptions = [
     { value: 60, label: '5 years' }
 ];
 
+// Constants for ISA banner
+const ISA_LIMIT_CHANGE_DATE = '2027-04-06T00:00:00+01:00'; // UK timezone
+
+// Custom hook for countdown timer
+const useCountdown = (targetDate) => {
+    const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+    useEffect(() => {
+        const target = new Date(targetDate).getTime();
+        
+        const updateCountdown = () => {
+            const now = new Date().getTime();
+            const distance = target - now;
+
+            if (distance > 0) {
+                setCountdown({
+                    days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+                    hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+                    minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+                    seconds: Math.floor((distance % (1000 * 60)) / 1000)
+                });
+            } else {
+                setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+            }
+        };
+
+        updateCountdown();
+        const interval = setInterval(updateCountdown, 1000);
+
+        return () => clearInterval(interval);
+    }, [targetDate]);
+
+    return countdown;
+};
+
+// Countdown display component
+const CountdownDisplay = ({ countdown }) => {
+    const countdownItems = useMemo(() => [
+        { value: countdown.days, label: 'Days', pad: false },
+        { value: countdown.hours, label: 'Hours', pad: true },
+        { value: countdown.minutes, label: 'Minutes', pad: true },
+        { value: countdown.seconds, label: 'Seconds', pad: true }
+    ], [countdown]);
+
+    return (
+        <Box 
+            sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flex: '0 0 auto' }}
+            role="timer"
+            aria-live="polite"
+            aria-label="Time remaining until ISA limit change"
+        >
+            {countdownItems.map((item, index) => (
+                <React.Fragment key={item.label}>
+                    {index > 0 && (
+                        <Typography 
+                            variant="body2" 
+                            sx={{ fontWeight: 700, color: '#d32f2f', fontSize: { xs: '0.7rem', sm: '0.875rem' } }}
+                            aria-hidden="true"
+                        >
+                            :
+                        </Typography>
+                    )}
+                    <Box sx={{ textAlign: 'center' }}>
+                        <Typography 
+                            variant="body2" 
+                            sx={{ 
+                                fontWeight: 700, 
+                                color: '#d32f2f', 
+                                lineHeight: 1, 
+                                fontSize: { xs: '0.7rem', sm: '0.875rem' }, 
+                                mb: 0.25 
+                            }}
+                            aria-label={`${item.value} ${item.label.toLowerCase()}`}
+                        >
+                            {item.pad ? String(item.value).padStart(2, '0') : item.value}
+                        </Typography>
+                        <Typography 
+                            variant="caption" 
+                            sx={{ 
+                                color: '#d32f2f', 
+                                textTransform: 'uppercase', 
+                                fontSize: { xs: '0.4rem', sm: '0.55rem' }, 
+                                letterSpacing: 0.5, 
+                                display: 'block' 
+                            }}
+                            aria-hidden="true"
+                        >
+                            {item.label}
+                        </Typography>
+                    </Box>
+                </React.Fragment>
+            ))}
+        </Box>
+    );
+};
+
 const InputPage = () => {
     const [earnings, setEarnings] = useState('');
     const [displayEarnings, setDisplayEarnings] = useState('');
@@ -42,10 +138,17 @@ const InputPage = () => {
     const [showFineTuneSection, setShowFineTuneSection] = useState(false);
     const [formTouched, setFormTouched] = useState(false);
     const [errorMessage, setErrorMessage] = useState(null);
-    const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
     const [bannerExpanded, setBannerExpanded] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
+    
+    // Use custom countdown hook
+    const countdown = useCountdown(ISA_LIMIT_CHANGE_DATE);
+    
+    // Memoize toggle handler
+    const handleBannerToggle = useCallback(() => {
+        setBannerExpanded(prev => !prev);
+    }, []);
 
     const formatCurrency = (rawValue) => {
         if (!rawValue && rawValue !== 0) return '';
@@ -202,34 +305,6 @@ const InputPage = () => {
         }
     }, [earnings, totalSavings, savingsGoals, isaAllowanceUsed, isSimpleView, showAdvanced, showIsaSlider, formTouched, saveFormToStorage]);
 
-    // Countdown timer for ISA limit change (April 6, 2027)
-    useEffect(() => {
-        const targetDate = new Date('2027-04-06T00:00:00+01:00').getTime(); // UK timezone
-        
-        const updateCountdown = () => {
-            const now = new Date().getTime();
-            const distance = targetDate - now;
-
-            if (distance > 0) {
-                setCountdown({
-                    days: Math.floor(distance / (1000 * 60 * 60 * 24)),
-                    hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-                    minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
-                    seconds: Math.floor((distance % (1000 * 60)) / 1000)
-                });
-            } else {
-                setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-            }
-        };
-
-        // Update immediately
-        updateCountdown();
-
-        // Update every second
-        const interval = setInterval(updateCountdown, 1000);
-
-        return () => clearInterval(interval);
-    }, []);
 
     const handleEarningsChange = (e) => {
         const rawValue = e.target.value.replace(/[^0-9]/g, '');
@@ -395,14 +470,21 @@ const InputPage = () => {
                             width: '100%',
                             paddingTop: 0,
                             paddingBottom: 0,
+                            paddingRight: 0,
+                            flex: 1,
+                        },
+                        '& .MuiAlert-action': {
+                            paddingLeft: 1,
+                            marginRight: 0,
                         },
                     }}
                     action={
                         <IconButton
-                            aria-label="info"
+                            aria-label={bannerExpanded ? 'Hide ISA limit details' : 'Show ISA limit details'}
+                            aria-expanded={bannerExpanded}
                             color="inherit"
                             size="small"
-                            onClick={() => setBannerExpanded(!bannerExpanded)}
+                            onClick={handleBannerToggle}
                             sx={{ color: '#d32f2f', padding: '4px' }}
                         >
                             {bannerExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
@@ -417,47 +499,14 @@ const InputPage = () => {
                             flexDirection: 'row',
                             flexWrap: 'nowrap', 
                             gap: 1,
-                            width: '100%'
+                            width: '100%',
+                            minWidth: 0
                         }}>
-                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#2D1B4E', lineHeight: 1.4, fontSize: { xs: '0.7rem', sm: '0.875rem' }, textAlign: 'left', flex: '0 0 auto' }}>
+                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#2D1B4E', lineHeight: 1.4, fontSize: { xs: '0.7rem', sm: '0.875rem' }, textAlign: 'left', flex: '0 0 auto', minWidth: 0 }}>
                                 New ISA Limit
                             </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flex: '0 0 auto', marginLeft: 'auto' }}>
-                                <Box sx={{ textAlign: 'center' }}>
-                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', lineHeight: 1, fontSize: { xs: '0.7rem', sm: '0.875rem' }, mb: 0.25 }}>
-                                        {countdown.days}
-                                    </Typography>
-                                    <Typography variant="caption" sx={{ color: '#d32f2f', textTransform: 'uppercase', fontSize: { xs: '0.4rem', sm: '0.55rem' }, letterSpacing: 0.5, display: 'block' }}>
-                                        Days
-                                    </Typography>
-                                </Box>
-                                <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', fontSize: { xs: '0.7rem', sm: '0.875rem' } }}>:</Typography>
-                                <Box sx={{ textAlign: 'center' }}>
-                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', lineHeight: 1, fontSize: { xs: '0.7rem', sm: '0.875rem' }, mb: 0.25 }}>
-                                        {String(countdown.hours).padStart(2, '0')}
-                                    </Typography>
-                                    <Typography variant="caption" sx={{ color: '#d32f2f', textTransform: 'uppercase', fontSize: { xs: '0.4rem', sm: '0.55rem' }, letterSpacing: 0.5, display: 'block' }}>
-                                        Hours
-                                    </Typography>
-                                </Box>
-                                <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', fontSize: { xs: '0.7rem', sm: '0.875rem' } }}>:</Typography>
-                                <Box sx={{ textAlign: 'center' }}>
-                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', lineHeight: 1, fontSize: { xs: '0.7rem', sm: '0.875rem' }, mb: 0.25 }}>
-                                        {String(countdown.minutes).padStart(2, '0')}
-                                    </Typography>
-                                    <Typography variant="caption" sx={{ color: '#d32f2f', textTransform: 'uppercase', fontSize: { xs: '0.4rem', sm: '0.55rem' }, letterSpacing: 0.5, display: 'block' }}>
-                                        Minutes
-                                    </Typography>
-                                </Box>
-                                <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', fontSize: { xs: '0.7rem', sm: '0.875rem' } }}>:</Typography>
-                                <Box sx={{ textAlign: 'center' }}>
-                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f', lineHeight: 1, fontSize: { xs: '0.7rem', sm: '0.875rem' }, mb: 0.25 }}>
-                                        {String(countdown.seconds).padStart(2, '0')}
-                                    </Typography>
-                                    <Typography variant="caption" sx={{ color: '#d32f2f', textTransform: 'uppercase', fontSize: { xs: '0.4rem', sm: '0.55rem' }, letterSpacing: 0.5, display: 'block' }}>
-                                        Seconds
-                                    </Typography>
-                                </Box>
+                            <Box sx={{ flex: '0 0 auto', marginLeft: 'auto' }}>
+                                <CountdownDisplay countdown={countdown} />
                             </Box>
                         </Box>
                         
@@ -519,7 +568,7 @@ const InputPage = () => {
                 <form onSubmit={handleSubmit}>
                     <Card sx={{ mb: 3, borderRadius: 3 }}>
                         <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
-                    <Popover
+                            <Popover
                         id={id}
                         open={open}
                         anchorEl={anchorEl}
@@ -535,24 +584,24 @@ const InputPage = () => {
                                 border: '1px solid rgba(155, 126, 222, 0.2)',
                             }
                         }}
-                    >
-                        <Box sx={{ p: 3, maxWidth: 400 }}>
-                            <Typography variant="h6" gutterBottom sx={{ color: '#2D1B4E', fontWeight: 600 }}>Don't Worry!</Typography>
-                            <Typography variant="body2" paragraph sx={{ color: '#6B5B8A' }}>
-                                A rough estimate is all we need! You only have to be accurate if you are near:
-                            </Typography>
-                            <Typography variant="body2" paragraph sx={{ color: '#6B5B8A' }}>
-                                <strong>£50,270 (when tax goes from 20% to 40%)</strong>
-                            </Typography>
-                            <Typography variant="body2" paragraph sx={{ color: '#6B5B8A' }}>
-                                <strong>£125,140 (when tax goes from 40% to 45%)</strong>
-                            </Typography>
-                            <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#6B5B8A' }}>
-                                By earnings we mean your total income; salary, bonuses, dividends, rent receipts, etc. before tax.
-                            </Typography>
-                        </Box>
-                    </Popover>
-                    <Popover
+                            >
+                                <Box sx={{ p: 3, maxWidth: 400 }}>
+                                    <Typography variant="h6" gutterBottom sx={{ color: '#2D1B4E', fontWeight: 600 }}>Don't Worry!</Typography>
+                                    <Typography variant="body2" paragraph sx={{ color: '#6B5B8A' }}>
+                                        A rough estimate is all we need! You only have to be accurate if you are near:
+                                    </Typography>
+                                    <Typography variant="body2" paragraph sx={{ color: '#6B5B8A' }}>
+                                        <strong>£50,270 (when tax goes from 20% to 40%)</strong>
+                                    </Typography>
+                                    <Typography variant="body2" paragraph sx={{ color: '#6B5B8A' }}>
+                                        <strong>£125,140 (when tax goes from 40% to 45%)</strong>
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#6B5B8A' }}>
+                                        By earnings we mean your total income; salary, bonuses, dividends, rent receipts, etc. before tax.
+                                    </Typography>
+                                </Box>
+                            </Popover>
+                            <Popover
                         id={savingsInfoId}
                         open={savingsInfoOpen}
                         anchorEl={savingsAnchorEl}
@@ -568,18 +617,18 @@ const InputPage = () => {
                                 border: '1px solid rgba(155, 126, 222, 0.2)',
                             }
                         }}
-                    >
-                        <Box sx={{ p: 3, maxWidth: 400 }}>
-                            <Typography variant="h6" gutterBottom sx={{ color: '#2D1B4E', fontWeight: 600 }}>About Total Savings</Typography>
-                            <Typography variant="body2" sx={{ color: '#6B5B8A' }}>
-                                Please enter the amount you're looking to save. Don't include the money you can't access because it's locked away.
+                            >
+                                <Box sx={{ p: 3, maxWidth: 400 }}>
+                                    <Typography variant="h6" gutterBottom sx={{ color: '#2D1B4E', fontWeight: 600 }}>About Total Savings</Typography>
+                                    <Typography variant="body2" sx={{ color: '#6B5B8A' }}>
+                                        Please enter the amount you're looking to save. Don't include the money you can't access because it's locked away.
+                                    </Typography>
+                                </Box>
+                            </Popover>
+                            
+                            <Typography variant="h6" sx={{ mb: 3, color: '#2D1B4E', fontWeight: 600 }}>
+                                Roughly how much...
                             </Typography>
-                        </Box>
-                    </Popover>
-                    
-                    <Typography variant="h6" sx={{ mb: 3, color: '#2D1B4E', fontWeight: 600 }}>
-                        Roughly how much...
-                    </Typography>
                     
                     <motion.div
                         whileHover={{ scale: 1.01 }}
@@ -609,10 +658,10 @@ const InputPage = () => {
                                 ),
                             }}
                             sx={{ mb: 3 }}
-                        />
-                    </motion.div>
+                            />
+                        </motion.div>
 
-                    {isSimpleView ? (
+                        {isSimpleView ? (
                         <>
                             <motion.div
                                 whileHover={{ scale: 1.01 }}
@@ -642,10 +691,10 @@ const InputPage = () => {
                                         ),
                                     }}
                                     sx={{ mb: 3 }}
-                                />
-                            </motion.div>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-                                <Button
+                                    />
+                                </motion.div>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                                    <Button
                                     variant="outlined"
                                     size="medium"
                                     onClick={() => setIsSimpleView(false)}
@@ -660,14 +709,14 @@ const InputPage = () => {
                                     sx={{ flex: 1, minWidth: '150px' }}
                                 >
                                     {showFineTuneSection ? 'Hide Fine-tune' : 'Fine-tune Options'}
-                                </Button>
-                            </Box>
-                        </>
-                    ) : (
-                        <>
-                            <Typography variant="h6" component="h2" sx={{ mb: 3, color: '#2D1B4E', fontWeight: 600 }}>
-                                Savings Breakdown
-                            </Typography>
+                                    </Button>
+                                </Box>
+                            </>
+                        ) : (
+                            <>
+                                <Typography variant="h6" component="h2" sx={{ mb: 3, color: '#2D1B4E', fontWeight: 600 }}>
+                                    Savings Breakdown
+                                </Typography>
                             {savingsGoals.map((goal, index) => (
                                 <motion.div
                                     key={index}
@@ -752,12 +801,12 @@ const InputPage = () => {
                                     sx={{ flex: 1, minWidth: '150px' }}
                                 >
                                     {showFineTuneSection ? 'Hide Fine-tune' : 'Fine-tune Options'}
-                                </Button>
-                            </Box>
-                        </>
-                    )}
+                                    </Button>
+                                </Box>
+                            </>
+                        )}
 
-                    {showFineTuneSection && (
+                        {showFineTuneSection && (
                         <motion.div
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
@@ -827,7 +876,7 @@ const InputPage = () => {
                                 </CardContent>
                             </Card>
                         </motion.div>
-                    )}
+                        )}
                         </CardContent>
                     </Card>
 
