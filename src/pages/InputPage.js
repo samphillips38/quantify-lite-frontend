@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Container, Box, Typography, TextField, Button,
@@ -8,6 +8,9 @@ import {
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import InfoIcon from '@mui/icons-material/Info';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { motion } from 'framer-motion';
 
 
@@ -21,6 +24,121 @@ const horizonOptions = [
     { value: 36, label: '3 years' },
     { value: 60, label: '5 years' }
 ];
+
+// Function to calculate the next ISA limit refresh date (April 6th)
+const getNextIsaRefreshDate = () => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth(); // 0-11 (January is 0)
+    const currentDay = now.getDate();
+    
+    // Create date for April 6th of current year (month 3 = April, day 6)
+    const april6ThisYear = new Date(currentYear, 3, 6, 0, 0, 0);
+    
+    // If we're before April 6th this year, use this year's date
+    // Otherwise, use next year's April 6th
+    if (currentMonth < 3 || (currentMonth === 3 && currentDay < 6)) {
+        // Before April 6th, use this year
+        return april6ThisYear.toISOString();
+    } else {
+        // On or after April 6th, use next year
+        const april6NextYear = new Date(currentYear + 1, 3, 6, 0, 0, 0);
+        return april6NextYear.toISOString();
+    }
+};
+
+// Custom hook for countdown timer
+const useCountdown = (targetDate) => {
+    const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+    useEffect(() => {
+        const target = new Date(targetDate).getTime();
+        
+        const updateCountdown = () => {
+            const now = new Date().getTime();
+            const distance = target - now;
+
+            if (distance > 0) {
+                setCountdown({
+                    days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+                    hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+                    minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+                    seconds: Math.floor((distance % (1000 * 60)) / 1000)
+                });
+            } else {
+                setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+            }
+        };
+
+        updateCountdown();
+        const interval = setInterval(updateCountdown, 1000);
+
+        return () => clearInterval(interval);
+    }, [targetDate]);
+
+    return countdown;
+};
+
+// Countdown display component
+const CountdownDisplay = ({ countdown }) => {
+    const countdownItems = useMemo(() => [
+        { value: countdown.days, label: 'Days', pad: false },
+        { value: countdown.hours, label: 'Hours', pad: true },
+        { value: countdown.minutes, label: 'Minutes', pad: true },
+        { value: countdown.seconds, label: 'Seconds', pad: true }
+    ], [countdown]);
+
+    return (
+        <Box 
+            sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flex: '0 0 auto' }}
+            role="timer"
+            aria-live="polite"
+            aria-label="Time remaining until ISA limit refresh"
+        >
+            {countdownItems.map((item, index) => (
+                <React.Fragment key={item.label}>
+                    {index > 0 && (
+                        <Typography 
+                            variant="body2" 
+                            sx={{ fontWeight: 700, color: '#d32f2f', fontSize: { xs: '0.7rem', sm: '0.875rem' } }}
+                            aria-hidden="true"
+                        >
+                            :
+                        </Typography>
+                    )}
+                    <Box sx={{ textAlign: 'center' }}>
+                        <Typography 
+                            variant="body2" 
+                            sx={{ 
+                                fontWeight: 700, 
+                                color: '#d32f2f', 
+                                lineHeight: 1, 
+                                fontSize: { xs: '0.7rem', sm: '0.875rem' }, 
+                                mb: 0.25 
+                            }}
+                            aria-label={`${item.value} ${item.label.toLowerCase()}`}
+                        >
+                            {item.pad ? String(item.value).padStart(2, '0') : item.value}
+                        </Typography>
+                        <Typography 
+                            variant="caption" 
+                            sx={{ 
+                                color: '#d32f2f', 
+                                textTransform: 'uppercase', 
+                                fontSize: { xs: '0.4rem', sm: '0.55rem' }, 
+                                letterSpacing: 0.5, 
+                                display: 'block' 
+                            }}
+                            aria-hidden="true"
+                        >
+                            {item.label}
+                        </Typography>
+                    </Box>
+                </React.Fragment>
+            ))}
+        </Box>
+    );
+};
 
 const InputPage = () => {
     const [earnings, setEarnings] = useState('');
@@ -39,8 +157,18 @@ const InputPage = () => {
     const [showFineTuneSection, setShowFineTuneSection] = useState(false);
     const [formTouched, setFormTouched] = useState(false);
     const [errorMessage, setErrorMessage] = useState(null);
+    const [bannerExpanded, setBannerExpanded] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
+    
+    // Calculate next ISA refresh date and use custom countdown hook
+    const nextIsaRefreshDate = useMemo(() => getNextIsaRefreshDate(), []);
+    const countdown = useCountdown(nextIsaRefreshDate);
+    
+    // Memoize toggle handler
+    const handleBannerToggle = useCallback(() => {
+        setBannerExpanded(prev => !prev);
+    }, []);
 
     const formatCurrency = (rawValue) => {
         if (!rawValue && rawValue !== 0) return '';
@@ -197,6 +325,7 @@ const InputPage = () => {
         }
     }, [earnings, totalSavings, savingsGoals, isaAllowanceUsed, isSimpleView, showAdvanced, showIsaSlider, formTouched, saveFormToStorage]);
 
+
     const handleEarningsChange = (e) => {
         const rawValue = e.target.value.replace(/[^0-9]/g, '');
         setEarnings(rawValue);
@@ -335,6 +464,86 @@ const InputPage = () => {
 
     return (
         <Container maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
+            {/* Countdown Banner */}
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+            >
+                <Alert 
+                    severity="error"
+                    icon={<WarningAmberIcon sx={{ fontSize: '1rem' }} />}
+                    sx={{ 
+                        mb: 4,
+                        borderRadius: 3,
+                        backgroundColor: 'rgba(211, 47, 47, 0.1)',
+                        border: '2px solid #d32f2f',
+                        color: '#2D1B4E',
+                        alignItems: 'center',
+                        py: 1,
+                        '& .MuiAlert-icon': {
+                            color: '#d32f2f',
+                            alignSelf: 'center',
+                            marginTop: 0,
+                        },
+                        '& .MuiAlert-message': {
+                            width: '100%',
+                            paddingTop: 0,
+                            paddingBottom: 0,
+                            paddingRight: 0,
+                            flex: 1,
+                        },
+                        '& .MuiAlert-action': {
+                            paddingLeft: 1,
+                            marginRight: 0,
+                        },
+                    }}
+                    action={
+                        <IconButton
+                            aria-label={bannerExpanded ? 'Hide ISA limit refresh details' : 'Show ISA limit refresh details'}
+                            aria-expanded={bannerExpanded}
+                            color="inherit"
+                            size="small"
+                            onClick={handleBannerToggle}
+                            sx={{ color: '#d32f2f', padding: '4px' }}
+                        >
+                            {bannerExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+                        </IconButton>
+                    }
+                >
+                    <Box sx={{ width: '100%' }}>
+                        <Box sx={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'space-between',
+                            flexDirection: 'row',
+                            flexWrap: 'nowrap', 
+                            gap: 1,
+                            width: '100%',
+                            minWidth: 0
+                        }}>
+                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#2D1B4E', lineHeight: 1.4, fontSize: { xs: '0.7rem', sm: '0.875rem' }, textAlign: 'left', flex: '0 0 auto', minWidth: 0 }}>
+                                ISA Refresh in
+                            </Typography>
+                            <Box sx={{ flex: '0 0 auto', marginLeft: 'auto' }}>
+                                <CountdownDisplay countdown={countdown} />
+                            </Box>
+                        </Box>
+                        
+                        <Collapse in={bannerExpanded}>
+                            <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid rgba(211, 47, 47, 0.2)' }}>
+                                <Typography variant="body2" sx={{ mb: 2, color: '#6B5B8A', lineHeight: 1.6 }}>
+                                    Your ISA allowance resets annually on <strong>April 6th</strong>, the start of the new tax year. Any unused allowance from the current tax year cannot be carried forward.
+                                </Typography>
+                                <Typography variant="body2" sx={{ mb: 2, color: '#d32f2f', fontWeight: 600, lineHeight: 1.6 }}>
+                                    Use this tool to optimize your savings and make the most of your current tax-free ISA allowance before it refreshes.
+                                </Typography>
+                            </Box>
+                        </Collapse>
+                    </Box>
+                </Alert>
+            </motion.div>
+
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -376,7 +585,7 @@ const InputPage = () => {
                 <form onSubmit={handleSubmit}>
                     <Card sx={{ mb: 3, borderRadius: 3 }}>
                         <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
-                    <Popover
+                            <Popover
                         id={id}
                         open={open}
                         anchorEl={anchorEl}
@@ -392,24 +601,24 @@ const InputPage = () => {
                                 border: '1px solid rgba(155, 126, 222, 0.2)',
                             }
                         }}
-                    >
-                        <Box sx={{ p: 3, maxWidth: 400 }}>
-                            <Typography variant="h6" gutterBottom sx={{ color: '#2D1B4E', fontWeight: 600 }}>Don't Worry!</Typography>
-                            <Typography variant="body2" paragraph sx={{ color: '#6B5B8A' }}>
-                                A rough estimate is all we need! You only have to be accurate if you are near:
-                            </Typography>
-                            <Typography variant="body2" paragraph sx={{ color: '#6B5B8A' }}>
-                                <strong>£50,270 (when tax goes from 20% to 40%)</strong>
-                            </Typography>
-                            <Typography variant="body2" paragraph sx={{ color: '#6B5B8A' }}>
-                                <strong>£125,140 (when tax goes from 40% to 45%)</strong>
-                            </Typography>
-                            <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#6B5B8A' }}>
-                                By earnings we mean your total income; salary, bonuses, dividends, rent receipts, etc. before tax.
-                            </Typography>
-                        </Box>
-                    </Popover>
-                    <Popover
+                            >
+                                <Box sx={{ p: 3, maxWidth: 400 }}>
+                                    <Typography variant="h6" gutterBottom sx={{ color: '#2D1B4E', fontWeight: 600 }}>Don't Worry!</Typography>
+                                    <Typography variant="body2" paragraph sx={{ color: '#6B5B8A' }}>
+                                        A rough estimate is all we need! You only have to be accurate if you are near:
+                                    </Typography>
+                                    <Typography variant="body2" paragraph sx={{ color: '#6B5B8A' }}>
+                                        <strong>£50,270 (when tax goes from 20% to 40%)</strong>
+                                    </Typography>
+                                    <Typography variant="body2" paragraph sx={{ color: '#6B5B8A' }}>
+                                        <strong>£125,140 (when tax goes from 40% to 45%)</strong>
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#6B5B8A' }}>
+                                        By earnings we mean your total income; salary, bonuses, dividends, rent receipts, etc. before tax.
+                                    </Typography>
+                                </Box>
+                            </Popover>
+                            <Popover
                         id={savingsInfoId}
                         open={savingsInfoOpen}
                         anchorEl={savingsAnchorEl}
@@ -425,18 +634,18 @@ const InputPage = () => {
                                 border: '1px solid rgba(155, 126, 222, 0.2)',
                             }
                         }}
-                    >
-                        <Box sx={{ p: 3, maxWidth: 400 }}>
-                            <Typography variant="h6" gutterBottom sx={{ color: '#2D1B4E', fontWeight: 600 }}>About Total Savings</Typography>
-                            <Typography variant="body2" sx={{ color: '#6B5B8A' }}>
-                                Please enter the amount you're looking to save. Don't include the money you can't access because it's locked away.
+                            >
+                                <Box sx={{ p: 3, maxWidth: 400 }}>
+                                    <Typography variant="h6" gutterBottom sx={{ color: '#2D1B4E', fontWeight: 600 }}>About Total Savings</Typography>
+                                    <Typography variant="body2" sx={{ color: '#6B5B8A' }}>
+                                        Please enter the amount you're looking to save. Don't include the money you can't access because it's locked away.
+                                    </Typography>
+                                </Box>
+                            </Popover>
+                            
+                            <Typography variant="h6" sx={{ mb: 3, color: '#2D1B4E', fontWeight: 600 }}>
+                                Roughly how much...
                             </Typography>
-                        </Box>
-                    </Popover>
-                    
-                    <Typography variant="h6" sx={{ mb: 3, color: '#2D1B4E', fontWeight: 600 }}>
-                        Roughly how much...
-                    </Typography>
                     
                     <motion.div
                         whileHover={{ scale: 1.01 }}
@@ -466,10 +675,10 @@ const InputPage = () => {
                                 ),
                             }}
                             sx={{ mb: 3 }}
-                        />
-                    </motion.div>
+                            />
+                        </motion.div>
 
-                    {isSimpleView ? (
+                        {isSimpleView ? (
                         <>
                             <motion.div
                                 whileHover={{ scale: 1.01 }}
@@ -499,10 +708,10 @@ const InputPage = () => {
                                         ),
                                     }}
                                     sx={{ mb: 3 }}
-                                />
-                            </motion.div>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-                                <Button
+                                    />
+                                </motion.div>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                                    <Button
                                     variant="outlined"
                                     size="medium"
                                     onClick={() => setIsSimpleView(false)}
@@ -517,14 +726,14 @@ const InputPage = () => {
                                     sx={{ flex: 1, minWidth: '150px' }}
                                 >
                                     {showFineTuneSection ? 'Hide Fine-tune' : 'Fine-tune Options'}
-                                </Button>
-                            </Box>
-                        </>
-                    ) : (
-                        <>
-                            <Typography variant="h6" component="h2" sx={{ mb: 3, color: '#2D1B4E', fontWeight: 600 }}>
-                                Savings Breakdown
-                            </Typography>
+                                    </Button>
+                                </Box>
+                            </>
+                        ) : (
+                            <>
+                                <Typography variant="h6" component="h2" sx={{ mb: 3, color: '#2D1B4E', fontWeight: 600 }}>
+                                    Savings Breakdown
+                                </Typography>
                             {savingsGoals.map((goal, index) => (
                                 <motion.div
                                     key={index}
@@ -609,12 +818,12 @@ const InputPage = () => {
                                     sx={{ flex: 1, minWidth: '150px' }}
                                 >
                                     {showFineTuneSection ? 'Hide Fine-tune' : 'Fine-tune Options'}
-                                </Button>
-                            </Box>
-                        </>
-                    )}
+                                    </Button>
+                                </Box>
+                            </>
+                        )}
 
-                    {showFineTuneSection && (
+                        {showFineTuneSection && (
                         <motion.div
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
@@ -684,7 +893,7 @@ const InputPage = () => {
                                 </CardContent>
                             </Card>
                         </motion.div>
-                    )}
+                        )}
                         </CardContent>
                     </Card>
 

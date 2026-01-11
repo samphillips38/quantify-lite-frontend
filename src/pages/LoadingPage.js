@@ -94,13 +94,14 @@ const BankCyclingDisplay = ({ currentIndex }) => {
     return (
         <Box sx={{ 
             width: '100%',
-            maxWidth: '500px',
+            maxWidth: '100%',
             mx: 'auto',
             mb: 4,
             minHeight: '120px',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            px: { xs: 2, sm: 3 },
         }}>
             <AnimatePresence mode="wait">
                 <motion.div
@@ -121,7 +122,9 @@ const BankCyclingDisplay = ({ currentIndex }) => {
                             alignItems: 'center',
                             justifyContent: 'center',
                             textAlign: 'center',
-                            px: 2
+                            px: { xs: 1, sm: 2 },
+                            fontSize: { xs: '1rem', sm: '1.25rem' },
+                            wordBreak: 'break-word',
                         }}
                     >
                         {currentBank}
@@ -134,14 +137,18 @@ const BankCyclingDisplay = ({ currentIndex }) => {
                 justifyContent: 'center', 
                 alignItems: 'center',
                 gap: 1,
-                mt: 2
+                mt: 2,
+                width: '100%',
             }}>
                 <Typography 
                     variant="caption" 
                     sx={{ 
                         color: '#6B5B8A',
-                        fontSize: '0.75rem',
-                        fontWeight: 500
+                        fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                        fontWeight: 500,
+                        textAlign: 'center',
+                        wordBreak: 'break-word',
+                        px: { xs: 1, sm: 0 },
                     }}
                 >
                     Scanning {Math.min(currentIndex + 1, totalBanks)} of {totalBanks}+ providers
@@ -169,8 +176,9 @@ const IridescentCloud = () => {
     return (
         <Box sx={{ 
             position: 'relative', 
-            width: '400px', 
-            height: '400px', 
+            width: '100%',
+            maxWidth: '400px',
+            aspectRatio: '1 / 1',
             margin: 'auto',
             mb: 4,
             // Enable hardware acceleration and high-quality rendering
@@ -588,7 +596,15 @@ const LoadingPage = () => {
     }, [optimizationData, error, navigate, loadingSteps.length]);
 
     return (
-        <Container maxWidth="sm">
+        <Container 
+            maxWidth="sm"
+            sx={{
+                overflowX: 'hidden',
+                width: '100%',
+                maxWidth: '100vw',
+                px: { xs: 2, sm: 3 },
+            }}
+        >
             <motion.div
                 variants={containerVariants}
                 initial="hidden"
@@ -601,14 +617,25 @@ const LoadingPage = () => {
                     flexDirection: 'column',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    py: 8
+                    py: { xs: 4, sm: 8 },
+                    width: '100%',
+                    maxWidth: '100%',
+                    overflowX: 'hidden',
                 }}>
                     {/* Iridescent Cloud Animation */}
                     <motion.div 
                         variants={itemVariants}
-                        style={{ marginBottom: '32px' }}
+                        style={{ 
+                            marginBottom: '32px',
+                            width: '100%',
+                            maxWidth: '100%',
+                            display: 'flex',
+                            justifyContent: 'center',
+                        }}
                     >
-                        <IridescentCloud />
+                        <Box sx={{ width: '100%', maxWidth: { xs: '280px', sm: '400px' } }}>
+                            <IridescentCloud />
+                        </Box>
                     </motion.div>
                     
                     {/* Searching Text */}
@@ -620,7 +647,10 @@ const LoadingPage = () => {
                                 fontWeight: 700,
                                 color: '#2D1B4E',
                                 mb: 2,
-                                letterSpacing: '-0.02em'
+                                letterSpacing: '-0.02em',
+                                fontSize: { xs: '1.75rem', sm: '2.125rem' },
+                                px: { xs: 2, sm: 0 },
+                                wordBreak: 'break-word',
                             }}
                         >
                             Searching
@@ -638,11 +668,15 @@ const LoadingPage = () => {
                             variant="body2" 
                             sx={{ 
                                 color: '#6B5B8A',
-                                mb: 6,
+                                mb: { xs: 4, sm: 6 },
                                 minHeight: '1.5em',
-                                maxWidth: '400px',
+                                maxWidth: '100%',
+                                width: '100%',
                                 mx: 'auto',
-                                fontSize: '0.875rem'
+                                fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                                px: { xs: 2, sm: 3 },
+                                wordBreak: 'break-word',
+                                textAlign: 'center',
                             }}
                         >
                             {loadingSteps[currentStep] || loadingSteps[loadingSteps.length - 1]}
@@ -679,7 +713,8 @@ const LoadingPage = () => {
                                 color: '#6B5B8A',
                                 textTransform: 'none',
                                 fontWeight: 500,
-                                fontSize: '1rem',
+                                fontSize: { xs: '0.9rem', sm: '1rem' },
+                                px: { xs: 2, sm: 3 },
                                 '&:hover': {
                                     backgroundColor: 'rgba(155, 126, 222, 0.08)',
                                 },
