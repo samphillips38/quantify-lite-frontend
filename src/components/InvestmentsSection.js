@@ -350,7 +350,7 @@ const InvestmentsSection = ({ investments, inputs, summary, sessionId, optimizat
                         </Typography>
                     </Box>
 
-                    <Box sx={{ mt: 3, mb: 2 }}>
+                    <Box sx={{ mt: 3, mb: 1 }}>
                         <Button
                             component="a"
                             href={RAISIN_REFERRAL_LINK}
@@ -368,14 +368,13 @@ const InvestmentsSection = ({ investments, inputs, summary, sessionId, optimizat
                                 borderRadius: 2,
                                 py: 1.5,
                                 fontWeight: 600,
-                                mb: 2,
                             }}
                         >
                             Open a Raisin UK Account
                         </Button>
                     </Box>
                 </DialogContent>
-                <DialogActions sx={{ p: 3, pt: 2 }}>
+                <DialogActions sx={{ p: 3, pt: 1, justifyContent: 'space-between', flexDirection: 'row' }}>
                     <Button 
                         onClick={() => {
                             navigator.clipboard.writeText(RAISIN_REFERRAL_LINK);
