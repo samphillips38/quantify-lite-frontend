@@ -3,7 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Container, Box, Typography, TextField, Button,
     Select, MenuItem, FormControl, InputLabel, IconButton,
-    CircularProgress, Slider, Popover, InputAdornment, Card, CardContent, Alert, Collapse
+    CircularProgress, Slider, Popover, InputAdornment, Card, CardContent, Alert, Collapse,
+    LinearProgress
 } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
@@ -11,7 +12,9 @@ import InfoIcon from '@mui/icons-material/Info';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import { motion } from 'framer-motion';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import { motion, AnimatePresence } from 'framer-motion';
 
 
 const horizonOptions = [
@@ -158,6 +161,9 @@ const InputPage = () => {
     const [formTouched, setFormTouched] = useState(false);
     const [errorMessage, setErrorMessage] = useState(null);
     const [bannerExpanded, setBannerExpanded] = useState(false);
+    const [surveyMode, setSurveyMode] = useState(false);
+    const [surveyStep, setSurveyStep] = useState(0);
+    const [surveyError, setSurveyError] = useState('');
     const navigate = useNavigate();
     const location = useLocation();
     
@@ -330,6 +336,7 @@ const InputPage = () => {
         const rawValue = e.target.value.replace(/[^0-9]/g, '');
         setEarnings(rawValue);
         setFormTouched(true);
+        if (surveyMode) setSurveyError('');
 
         if (rawValue) {
             const formattedValue = new Intl.NumberFormat('en-GB', {
@@ -348,6 +355,7 @@ const InputPage = () => {
         const rawValue = e.target.value.replace(/[^0-9]/g, '');
         setTotalSavings(rawValue);
         setFormTouched(true);
+        if (surveyMode) setSurveyError('');
 
         if (rawValue) {
             const formattedValue = new Intl.NumberFormat('en-GB', {
@@ -407,6 +415,79 @@ const InputPage = () => {
         });
     };
 
+    // Survey mode definitions
+    const surveySteps = [
+        {
+            title: 'What are your annual earnings?',
+            description: 'This is your total income before tax for the current tax year (6th April to 5th April). Include your salary, bonuses, dividends, rental income, and any other sources of income. Don\'t worry about being exact — a rough estimate is perfectly fine!',
+            field: 'earnings',
+        },
+        {
+            title: 'How much would you like to save?',
+            description: 'Enter the total amount of money you\'d like to put into savings right now. This should be money you currently have available and can access — don\'t include anything locked away in pensions or fixed-term accounts that haven\'t matured.',
+            field: 'savings',
+        },
+        {
+            title: 'Have you used any of your ISA allowance?',
+            description: 'Every tax year you can save up to £20,000 into ISAs (Individual Savings Accounts) tax-free. If you\'ve already deposited money into an ISA this tax year, let us know how much so we can work with what\'s left. If you haven\'t, or you\'re not sure, just leave this at £0.',
+            field: 'isa',
+        },
+        {
+            title: 'Do you earn interest from other savings?',
+            description: 'If you have money in other savings accounts that are already earning interest (e.g. a fixed-term bond or another easy-access account), enter the approximate annual interest you receive. This helps us calculate your remaining tax-free Personal Savings Allowance. If you\'re not sure, just leave this at £0.',
+            field: 'otherIncome',
+        },
+    ];
+
+    const handleSurveyNext = () => {
+        let error = '';
+        if (surveyStep === 0) {
+            error = validateEarnings(earnings);
+        } else if (surveyStep === 1) {
+            error = validateSavings(totalSavings, 'total savings amount');
+        }
+        // Steps 2 & 3 (sliders) always have valid values — no validation needed
+
+        if (error) {
+            setSurveyError(error);
+            return;
+        }
+
+        setSurveyError('');
+
+        if (surveyStep < surveySteps.length - 1) {
+            setSurveyStep(prev => prev + 1);
+        } else {
+            // Final step — submit with simple view and current values
+            setIsSimpleView(true);
+            setLoading(true);
+            const inputs = {
+                earnings: parseFloat(earnings),
+                savings_goals: [{
+                    amount: parseFloat(totalSavings),
+                    horizon: 0,
+                }],
+                isa_allowance_used: isaAllowanceUsed,
+                other_savings_income: otherSavingsIncome,
+            };
+            navigate('/loading', {
+                state: {
+                    inputs: inputs,
+                    isSimpleAnalysis: true
+                }
+            });
+        }
+    };
+
+    const handleSurveyBack = () => {
+        setSurveyError('');
+        if (surveyStep === 0) {
+            setSurveyMode(false);
+        } else {
+            setSurveyStep(prev => prev - 1);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         
@@ -463,7 +544,9 @@ const InputPage = () => {
     };
 
     return (
-        <Container maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
+        <Container maxWidth={surveyMode ? false : 'md'} disableGutters={surveyMode} sx={{ py: surveyMode ? 0 : { xs: 3, sm: 6 } }}>
+            {!surveyMode && (
+            <>
             {/* Countdown Banner */}
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
@@ -582,6 +665,42 @@ const InputPage = () => {
                         Answer these two questions and get your savings sorted.
                     </Typography>
                 </Box>
+
+                {/* Survey CTA */}
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                    <Card
+                        onClick={() => { setSurveyMode(true); setSurveyStep(0); setSurveyError(''); }}
+                        sx={{
+                            mb: 4,
+                            borderRadius: 3,
+                            cursor: 'pointer',
+                            border: '2px dashed rgba(155, 126, 222, 0.4)',
+                            backgroundColor: 'rgba(155, 126, 222, 0.04)',
+                            textAlign: 'center',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                                backgroundColor: 'rgba(155, 126, 222, 0.08)',
+                                borderColor: '#9B7EDE',
+                                borderStyle: 'solid',
+                                transform: 'translateY(-2px)',
+                                boxShadow: '0 4px 20px rgba(155, 126, 222, 0.15)',
+                            }
+                        }}
+                    >
+                        <CardContent sx={{ py: 3 }}>
+                            <Typography variant="h6" sx={{ fontWeight: 600, color: '#2D1B4E', mb: 0.5 }}>
+                                Not sure where to start?
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: '#6B5B8A' }}>
+                                Take our guided survey — we'll walk you through each step
+                            </Typography>
+                        </CardContent>
+                    </Card>
+                </motion.div>
 
                 <form onSubmit={handleSubmit}>
                     <Card sx={{ mb: 3, borderRadius: 3 }}>
@@ -924,6 +1043,251 @@ const InputPage = () => {
                     </motion.div>
                 </form>
             </motion.div>
+            </>
+            )}
+
+            {surveyMode && (
+                <Box
+                    sx={{
+                        minHeight: '100vh',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        px: { xs: 3, sm: 4 },
+                        py: { xs: 4, sm: 6 },
+                        position: 'relative',
+                    }}
+                >
+                    {/* Back to form link — fixed top-left */}
+                    <Box sx={{ position: 'absolute', top: { xs: 16, sm: 24 }, left: { xs: 16, sm: 24 } }}>
+                        <Button
+                            startIcon={<ArrowBackIcon />}
+                            onClick={() => { setSurveyMode(false); setSurveyStep(0); setSurveyError(''); }}
+                            sx={{ color: '#6B5B8A', textTransform: 'none', fontWeight: 500 }}
+                        >
+                            Back to full form
+                        </Button>
+                    </Box>
+
+                    {/* Progress bar */}
+                    <Box sx={{ width: '100%', maxWidth: 600, mb: 5 }}>
+                        <LinearProgress
+                            variant="determinate"
+                            value={((surveyStep + 1) / surveySteps.length) * 100}
+                            sx={{
+                                borderRadius: 2,
+                                height: 6,
+                                backgroundColor: 'rgba(155, 126, 222, 0.15)',
+                                '& .MuiLinearProgress-bar': {
+                                    backgroundColor: '#9B7EDE',
+                                    borderRadius: 2,
+                                    transition: 'transform 0.4s ease',
+                                }
+                            }}
+                        />
+                        <Typography variant="caption" sx={{ mt: 1, display: 'block', textAlign: 'center', color: '#6B5B8A' }}>
+                            Step {surveyStep + 1} of {surveySteps.length}
+                        </Typography>
+                    </Box>
+
+                    {/* Step content */}
+                    <Box sx={{ width: '100%', maxWidth: 600 }}>
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={surveyStep}
+                                initial={{ opacity: 0, x: 60 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -60 }}
+                                transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                            >
+                                <Box sx={{ textAlign: 'center', mb: 5 }}>
+                                    <Typography
+                                        variant="h3"
+                                        sx={{
+                                            fontWeight: 700,
+                                            color: '#2D1B4E',
+                                            mb: 2,
+                                            fontSize: { xs: '1.75rem', sm: '2.25rem' },
+                                            letterSpacing: '-0.02em',
+                                        }}
+                                    >
+                                        {surveySteps[surveyStep].title}
+                                    </Typography>
+                                    <Typography
+                                        variant="body1"
+                                        sx={{ color: '#6B5B8A', lineHeight: 1.8, maxWidth: 520, mx: 'auto' }}
+                                    >
+                                        {surveySteps[surveyStep].description}
+                                    </Typography>
+                                </Box>
+
+                                <Card sx={{ borderRadius: 3, mb: 4 }}>
+                                    <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
+                                        {/* Earnings input */}
+                                        {surveyStep === 0 && (
+                                            <TextField
+                                                fullWidth
+                                                label="Annual earnings"
+                                                value={displayEarnings}
+                                                onChange={handleEarningsChange}
+                                                placeholder="e.g., £50,000"
+                                                variant="outlined"
+                                                inputProps={{ inputMode: 'numeric' }}
+                                                error={!!surveyError}
+                                                helperText={surveyError}
+                                                autoFocus
+                                                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSurveyNext(); } }}
+                                            />
+                                        )}
+
+                                        {/* Savings input */}
+                                        {surveyStep === 1 && (
+                                            <TextField
+                                                fullWidth
+                                                label="Amount to save"
+                                                value={displayTotalSavings}
+                                                onChange={handleTotalSavingsChange}
+                                                placeholder="e.g., £25,000"
+                                                variant="outlined"
+                                                inputProps={{ inputMode: 'numeric' }}
+                                                error={!!surveyError}
+                                                helperText={surveyError}
+                                                autoFocus
+                                                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSurveyNext(); } }}
+                                            />
+                                        )}
+
+                                        {/* ISA Allowance slider */}
+                                        {surveyStep === 2 && (
+                                            <Box>
+                                                <Typography gutterBottom sx={{ fontWeight: 500, color: '#2D1B4E', mb: 1, textAlign: 'center' }}>
+                                                    ISA Allowance Used
+                                                </Typography>
+                                                <Typography variant="h4" sx={{ fontWeight: 700, color: '#9B7EDE', textAlign: 'center', mb: 3 }}>
+                                                    £{isaAllowanceUsed.toLocaleString()}
+                                                </Typography>
+                                                <Box sx={{ px: { xs: 1, sm: 3 } }}>
+                                                    <Slider
+                                                        value={isaAllowanceUsed}
+                                                        onChange={(e, newValue) => setIsaAllowanceUsed(newValue)}
+                                                        valueLabelDisplay="auto"
+                                                        valueLabelFormat={(v) => `£${v.toLocaleString()}`}
+                                                        step={500}
+                                                        marks={[
+                                                            { value: 0, label: '£0' },
+                                                            { value: 10000, label: '£10k' },
+                                                            { value: 20000, label: '£20k' },
+                                                        ]}
+                                                        min={0}
+                                                        max={20000}
+                                                        sx={{
+                                                            color: '#9B7EDE',
+                                                            height: 8,
+                                                            '& .MuiSlider-thumb': {
+                                                                width: 24,
+                                                                height: 24,
+                                                                '&:hover': {
+                                                                    boxShadow: '0 0 0 8px rgba(155, 126, 222, 0.16)',
+                                                                },
+                                                            },
+                                                            '& .MuiSlider-markLabel': {
+                                                                color: '#6B5B8A',
+                                                                fontSize: '0.75rem',
+                                                            },
+                                                        }}
+                                                    />
+                                                </Box>
+                                            </Box>
+                                        )}
+
+                                        {/* Other Savings Income slider */}
+                                        {surveyStep === 3 && (
+                                            <Box>
+                                                <Typography gutterBottom sx={{ fontWeight: 500, color: '#2D1B4E', mb: 1, textAlign: 'center' }}>
+                                                    Annual Interest from Other Savings
+                                                </Typography>
+                                                <Typography variant="h4" sx={{ fontWeight: 700, color: '#9B7EDE', textAlign: 'center', mb: 3 }}>
+                                                    £{otherSavingsIncome.toLocaleString()}{otherSavingsIncome >= 1000 ? '+' : ''}
+                                                </Typography>
+                                                <Box sx={{ px: { xs: 1, sm: 3 } }}>
+                                                    <Slider
+                                                        value={otherSavingsIncome}
+                                                        onChange={(e, newValue) => setOtherSavingsIncome(newValue)}
+                                                        valueLabelDisplay="auto"
+                                                        valueLabelFormat={(v) => `£${v.toLocaleString()}`}
+                                                        step={50}
+                                                        marks={[
+                                                            { value: 0, label: '£0' },
+                                                            { value: 500, label: '£500' },
+                                                            { value: 1000, label: '£1k+' },
+                                                        ]}
+                                                        min={0}
+                                                        max={1000}
+                                                        sx={{
+                                                            color: '#9B7EDE',
+                                                            height: 8,
+                                                            '& .MuiSlider-thumb': {
+                                                                width: 24,
+                                                                height: 24,
+                                                                '&:hover': {
+                                                                    boxShadow: '0 0 0 8px rgba(155, 126, 222, 0.16)',
+                                                                },
+                                                            },
+                                                            '& .MuiSlider-markLabel': {
+                                                                color: '#6B5B8A',
+                                                                fontSize: '0.75rem',
+                                                            },
+                                                        }}
+                                                    />
+                                                </Box>
+                                            </Box>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
+                        </AnimatePresence>
+
+                        {/* Navigation buttons */}
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2 }}>
+                            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                                <Button
+                                    variant="outlined"
+                                    size="large"
+                                    startIcon={<ArrowBackIcon />}
+                                    onClick={handleSurveyBack}
+                                    sx={{ px: { xs: 3, sm: 4 }, py: 1.5 }}
+                                >
+                                    {surveyStep === 0 ? 'Exit' : 'Back'}
+                                </Button>
+                            </motion.div>
+
+                            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                                <Button
+                                    variant="contained"
+                                    size="large"
+                                    endIcon={surveyStep < surveySteps.length - 1 ? <ArrowForwardIcon /> : null}
+                                    onClick={handleSurveyNext}
+                                    disabled={loading}
+                                    sx={{
+                                        px: { xs: 3, sm: 4 },
+                                        py: 1.5,
+                                        fontWeight: 600,
+                                    }}
+                                >
+                                    {loading ? (
+                                        <CircularProgress size={24} sx={{ color: '#FFFFFF' }} />
+                                    ) : surveyStep < surveySteps.length - 1 ? (
+                                        'Continue'
+                                    ) : (
+                                        'Optimise Savings'
+                                    )}
+                                </Button>
+                            </motion.div>
+                        </Box>
+                    </Box>
+                </Box>
+            )}
         </Container>
     );
 };
