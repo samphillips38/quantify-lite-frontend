@@ -479,6 +479,7 @@ const LoadingPage = () => {
                             }],
                             isa_allowance_used: inputs.isa_allowance_used,
                             other_savings_income: inputs.other_savings_income,
+                            excluded_providers: inputs.excluded_providers || [],
                             session_id: sessionId,
                             batch_id: batchId,  // All optimizations in this run share the same batch_id
                         };
@@ -508,6 +509,7 @@ const LoadingPage = () => {
                         })),
                         isa_allowance_used: inputs.isa_allowance_used,
                         other_savings_income: inputs.other_savings_income,
+                        excluded_providers: inputs.excluded_providers || [],
                         session_id: sessionId,
                         batch_id: batchId,  // Include batch_id for single optimizations too
                     };
