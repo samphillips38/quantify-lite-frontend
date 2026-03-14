@@ -173,6 +173,7 @@ const InputPage = () => {
     const [surveyMode, setSurveyMode] = useState(false);
     const [surveyStep, setSurveyStep] = useState(0);
     const [surveyError, setSurveyError] = useState('');
+    const [otherIncomeOption, setOtherIncomeOption] = useState(null); // null | 'none' | 'low' | 'high'
     const navigate = useNavigate();
     const location = useLocation();
     
@@ -471,7 +472,12 @@ const InputPage = () => {
         } else if (surveyStep === 1) {
             error = validateSavings(totalSavings, 'total savings amount');
         }
-        // Steps 2 & 3 (sliders) always have valid values — no validation needed
+        // Step 2 (ISA slider) always has a valid value
+        // Step 3 requires an option to be chosen
+        if (surveyStep === 3 && !otherIncomeOption) {
+            setSurveyError('Please select an option to continue.');
+            return;
+        }
 
         if (error) {
             setSurveyError(error);
@@ -510,6 +516,11 @@ const InputPage = () => {
         if (surveyStep === 0) {
             setSurveyMode(false);
         } else {
+            // If navigating back from step 3 (otherIncome), reset the option so it shows fresh buttons
+            if (surveyStep === 3) {
+                setOtherIncomeOption(null);
+                setOtherSavingsIncome(0);
+            }
             setSurveyStep(prev => prev - 1);
         }
     };
@@ -1288,46 +1299,109 @@ const InputPage = () => {
                                             </Box>
                                         )}
 
-                                        {/* Other Savings Income slider */}
+                                        {/* Other Savings Income — option buttons + conditional slider */}
                                         {surveyStep === 3 && (
                                             <Box>
-                                                <Typography gutterBottom sx={{ fontWeight: 500, color: '#2D1B4E', mb: 1, textAlign: 'center' }}>
-                                                    Annual Interest from Other Savings
-                                                </Typography>
-                                                <Typography variant="h4" sx={{ fontWeight: 700, color: '#9B7EDE', textAlign: 'center', mb: 3 }}>
-                                                    £{otherSavingsIncome.toLocaleString()}{otherSavingsIncome >= 1000 ? '+' : ''}
-                                                </Typography>
-                                                <Box sx={{ px: { xs: 1, sm: 3 } }}>
-                                                    <Slider
-                                                        value={otherSavingsIncome}
-                                                        onChange={(e, newValue) => setOtherSavingsIncome(newValue)}
-                                                        valueLabelDisplay="auto"
-                                                        valueLabelFormat={(v) => `£${v.toLocaleString()}`}
-                                                        step={50}
-                                                        marks={[
-                                                            { value: 0, label: '£0' },
-                                                            { value: 500, label: '£500' },
-                                                            { value: 1000, label: '£1k+' },
-                                                        ]}
-                                                        min={0}
-                                                        max={1000}
-                                                        sx={{
-                                                            color: '#9B7EDE',
-                                                            height: 8,
-                                                            '& .MuiSlider-thumb': {
-                                                                width: 24,
-                                                                height: 24,
-                                                                '&:hover': {
-                                                                    boxShadow: '0 0 0 8px rgba(155, 126, 222, 0.16)',
-                                                                },
-                                                            },
-                                                            '& .MuiSlider-markLabel': {
-                                                                color: '#6B5B8A',
-                                                                fontSize: '0.75rem',
-                                                            },
-                                                        }}
-                                                    />
+                                                {/* Three option buttons */}
+                                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                                    {[
+                                                        { key: 'none', label: 'None', sub: 'I don\'t earn interest from other savings' },
+                                                        { key: 'low',  label: '£0 – £1,000', sub: 'I earn some interest — let me be more specific' },
+                                                        { key: 'high', label: 'Over £1,000', sub: 'I earn more than £1,000 interest per year' },
+                                                    ].map(opt => {
+                                                        const selected = otherIncomeOption === opt.key;
+                                                        return (
+                                                            <Box
+                                                                key={opt.key}
+                                                                onClick={() => {
+                                                                    setOtherIncomeOption(opt.key);
+                                                                    setSurveyError('');
+                                                                    if (opt.key === 'none') {
+                                                                        setOtherSavingsIncome(0);
+                                                                    } else if (opt.key === 'high') {
+                                                                        setOtherSavingsIncome(1000);
+                                                                    } else {
+                                                                        // 'low' — keep current slider value or reset to a sensible default
+                                                                        setOtherSavingsIncome(prev => prev > 0 && prev < 950 ? prev : 100);
+                                                                    }
+                                                                }}
+                                                                sx={{
+                                                                    p: 2,
+                                                                    borderRadius: 2,
+                                                                    border: selected
+                                                                        ? '2px solid #9B7EDE'
+                                                                        : '2px solid rgba(155, 126, 222, 0.25)',
+                                                                    backgroundColor: selected
+                                                                        ? 'rgba(155, 126, 222, 0.1)'
+                                                                        : 'transparent',
+                                                                    cursor: 'pointer',
+                                                                    transition: 'all 0.2s ease',
+                                                                    '&:hover': {
+                                                                        borderColor: '#9B7EDE',
+                                                                        backgroundColor: 'rgba(155, 126, 222, 0.06)',
+                                                                    },
+                                                                }}
+                                                            >
+                                                                <Typography sx={{ fontWeight: 600, color: selected ? '#9B7EDE' : '#2D1B4E', fontSize: '1rem' }}>
+                                                                    {opt.label}
+                                                                </Typography>
+                                                                <Typography variant="body2" sx={{ color: '#6B5B8A', mt: 0.25 }}>
+                                                                    {opt.sub}
+                                                                </Typography>
+                                                            </Box>
+                                                        );
+                                                    })}
                                                 </Box>
+
+                                                {/* Validation error */}
+                                                {surveyError && (
+                                                    <Typography variant="body2" sx={{ mt: 2, color: 'error.main', textAlign: 'center' }}>
+                                                        {surveyError}
+                                                    </Typography>
+                                                )}
+
+                                                {/* Slider — only shown when '£0–£1,000' is selected */}
+                                                {otherIncomeOption === 'low' && (
+                                                    <Box sx={{ mt: 4 }}>
+                                                        <Typography gutterBottom sx={{ fontWeight: 500, color: '#2D1B4E', mb: 1, textAlign: 'center' }}>
+                                                            Roughly how much?
+                                                        </Typography>
+                                                        <Typography variant="h4" sx={{ fontWeight: 700, color: '#9B7EDE', textAlign: 'center', mb: 3 }}>
+                                                            £{otherSavingsIncome.toLocaleString()}
+                                                        </Typography>
+                                                        <Box sx={{ px: { xs: 1, sm: 3 } }}>
+                                                            <Slider
+                                                                value={otherSavingsIncome}
+                                                                onChange={(e, newValue) => setOtherSavingsIncome(newValue)}
+                                                                valueLabelDisplay="auto"
+                                                                valueLabelFormat={(v) => `£${v.toLocaleString()}`}
+                                                                step={50}
+                                                                marks={[
+                                                                    { value: 0, label: '£0' },
+                                                                    { value: 500, label: '£500' },
+                                                                    { value: 950, label: '£950' },
+                                                                ]}
+                                                                min={0}
+                                                                max={950}
+                                                                sx={{
+                                                                    color: '#9B7EDE',
+                                                                    height: 8,
+                                                                    '& .MuiSlider-thumb': {
+                                                                        width: 24,
+                                                                        height: 24,
+                                                                        '&:hover': {
+                                                                            boxShadow: '0 0 0 8px rgba(155, 126, 222, 0.16)',
+                                                                        },
+                                                                    },
+                                                                    '& .MuiSlider-markLabel': {
+                                                                        color: '#6B5B8A',
+                                                                        fontSize: '0.75rem',
+                                                                    },
+                                                                }}
+                                                            />
+                                                        </Box>
+                                                    </Box>
+                                                )}
                                             </Box>
                                         )}
                                     </CardContent>
