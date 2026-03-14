@@ -430,12 +430,12 @@ const LoadingPage = () => {
         let stepIntervalId = null;
         let bankIntervalId = null;
 
-        // Cycle through banks every 600ms to show activity (slightly longer for readability)
+        // Cycle through banks every 60ms to show activity
         bankIntervalId = setInterval(() => {
             if (!cancelledRef.current) {
                 setCurrentBankIndex(prev => (prev + 1) % UK_BANKS_AND_PROVIDERS.length);
             }
-        }, 600);
+        }, 60);
         intervalsRef.current.bankInterval = bankIntervalId;
 
         // Simulate progress through loading steps - go through each step once
