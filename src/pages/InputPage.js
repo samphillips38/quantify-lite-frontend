@@ -4,7 +4,7 @@ import {
     Container, Box, Typography, TextField, Button,
     Select, MenuItem, FormControl, InputLabel, IconButton,
     CircularProgress, Slider, Popover, InputAdornment, Card, CardContent, Alert, Collapse,
-    LinearProgress
+    LinearProgress, Chip, Divider
 } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
@@ -14,7 +14,15 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import BlockIcon from '@mui/icons-material/Block';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { motion, AnimatePresence } from 'framer-motion';
+
+const ALL_PROVIDERS = [
+    { id: 'Hargreaves Lansdown', label: 'Hargreaves Lansdown' },
+    { id: 'Raisin', label: 'Raisin' },
+    { id: 'Flagstone', label: 'Flagstone' },
+];
 
 
 const horizonOptions = [
@@ -151,6 +159,7 @@ const InputPage = () => {
     const [savingsGoals, setSavingsGoals] = useState([{ amount: '', displayAmount: '', horizon: 0 }]);
     const [isaAllowanceUsed, setIsaAllowanceUsed] = useState(0);
     const [otherSavingsIncome, setOtherSavingsIncome] = useState(0);
+    const [excludedProviders, setExcludedProviders] = useState([]);
     const [loading, setLoading] = useState(false);
     const [isSimpleView, setIsSimpleView] = useState(true);
     const [showAdvanced, setShowAdvanced] = useState(false);
@@ -212,13 +221,14 @@ const InputPage = () => {
             totalSavings,
             savingsGoals,
             isaAllowanceUsed,
+            excludedProviders,
             isSimpleView,
             showAdvanced,
             showIsaSlider,
             timestamp: Date.now()
         };
         localStorage.setItem('quantifyLiteForm', JSON.stringify(formData));
-    }, [earnings, totalSavings, savingsGoals, isaAllowanceUsed, isSimpleView, showAdvanced, showIsaSlider]);
+    }, [earnings, totalSavings, savingsGoals, isaAllowanceUsed, excludedProviders, isSimpleView, showAdvanced, showIsaSlider]);
 
     const loadFormFromStorage = () => {
         try {
@@ -276,10 +286,15 @@ const InputPage = () => {
             setEarnings(rawEarnings);
             setDisplayEarnings(formatCurrency(rawEarnings));
 
-            // Restore ISA allowance
+            // Restore ISA allowance and fine-tune options
             setIsaAllowanceUsed(inputs.isa_allowance_used || 0);
             setOtherSavingsIncome(inputs.other_savings_income || 0);
-            setShowFineTuneSection((inputs.isa_allowance_used > 0) || (inputs.other_savings_income > 0));
+            setExcludedProviders(inputs.excluded_providers || []);
+            setShowFineTuneSection(
+                (inputs.isa_allowance_used > 0) ||
+                (inputs.other_savings_income > 0) ||
+                (inputs.excluded_providers && inputs.excluded_providers.length > 0)
+            );
 
             // Restore view mode
             setIsSimpleView(isSimpleAnalysis);
@@ -314,6 +329,7 @@ const InputPage = () => {
                 setDisplayTotalSavings(formatCurrency(savedData.totalSavings));
                 setSavingsGoals(savedData.savingsGoals || [{ amount: '', displayAmount: '', horizon: 0 }]);
                 setIsaAllowanceUsed(savedData.isaAllowanceUsed || 0);
+                setExcludedProviders(savedData.excludedProviders || []);
                 setIsSimpleView(savedData.isSimpleView ?? true);
                 setShowAdvanced(savedData.showAdvanced || false);
                 setShowIsaSlider(savedData.showIsaSlider || false);
@@ -329,7 +345,7 @@ const InputPage = () => {
             }, 1000); // Save 1 second after user stops typing
             return () => clearTimeout(timeoutId);
         }
-    }, [earnings, totalSavings, savingsGoals, isaAllowanceUsed, isSimpleView, showAdvanced, showIsaSlider, formTouched, saveFormToStorage]);
+    }, [earnings, totalSavings, savingsGoals, isaAllowanceUsed, excludedProviders, isSimpleView, showAdvanced, showIsaSlider, formTouched, saveFormToStorage]);
 
 
     const handleEarningsChange = (e) => {
@@ -410,9 +426,18 @@ const InputPage = () => {
             if (!newShow) {
                 setIsaAllowanceUsed(0); // Full ISA left if hidden
                 setOtherSavingsIncome(0); // Reset savings income if hidden
+                setExcludedProviders([]); // Reset excluded providers if hidden
             }
             return newShow;
         });
+    };
+
+    const handleProviderToggle = (providerId) => {
+        setExcludedProviders(prev =>
+            prev.includes(providerId)
+                ? prev.filter(p => p !== providerId)
+                : [...prev, providerId]
+        );
     };
 
     // Survey mode definitions
@@ -469,6 +494,7 @@ const InputPage = () => {
                 }],
                 isa_allowance_used: isaAllowanceUsed,
                 other_savings_income: otherSavingsIncome,
+                excluded_providers: excludedProviders,
             };
             navigate('/loading', {
                 state: {
@@ -523,6 +549,7 @@ const InputPage = () => {
                 }],
                 isa_allowance_used: isaAllowanceUsed,
                 other_savings_income: otherSavingsIncome,
+                excluded_providers: excludedProviders,
             }
             : {
                 earnings: parseFloat(earnings),
@@ -532,6 +559,7 @@ const InputPage = () => {
                 })),
                 isa_allowance_used: isaAllowanceUsed,
                 other_savings_income: otherSavingsIncome,
+                excluded_providers: excludedProviders,
             };
 
         // Navigate to loading page with the inputs
@@ -668,39 +696,42 @@ const InputPage = () => {
 
                 {/* Survey CTA */}
                 <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                 >
-                    <Card
+                    <Button
+                        type="button"
+                        variant="contained"
+                        size="large"
+                        fullWidth
                         onClick={() => { setSurveyMode(true); setSurveyStep(0); setSurveyError(''); }}
                         sx={{
-                            mb: 4,
+                            py: 2,
+                            fontSize: '1rem',
+                            fontWeight: 600,
+                            backgroundColor: '#2D1B4E',
+                            color: '#FFFFFF',
                             borderRadius: 3,
-                            cursor: 'pointer',
-                            border: '2px dashed rgba(155, 126, 222, 0.4)',
-                            backgroundColor: 'rgba(155, 126, 222, 0.04)',
-                            textAlign: 'center',
-                            transition: 'all 0.3s ease',
+                            textTransform: 'none',
+                            lineHeight: 1.4,
                             '&:hover': {
-                                backgroundColor: 'rgba(155, 126, 222, 0.08)',
-                                borderColor: '#9B7EDE',
-                                borderStyle: 'solid',
-                                transform: 'translateY(-2px)',
-                                boxShadow: '0 4px 20px rgba(155, 126, 222, 0.15)',
-                            }
+                                backgroundColor: '#3D2B5E',
+                                boxShadow: '0 6px 24px rgba(45, 27, 78, 0.3)',
+                            },
                         }}
                     >
-                        <CardContent sx={{ py: 3 }}>
-                            <Typography variant="h6" sx={{ fontWeight: 600, color: '#2D1B4E', mb: 0.5 }}>
-                                Not sure where to start?
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: '#6B5B8A' }}>
-                                Take our guided survey — we'll walk you through each step
-                            </Typography>
-                        </CardContent>
-                    </Card>
+                        Not sure where to start? Take the survey!
+                    </Button>
                 </motion.div>
+
+                {/* Or divider */}
+                <Box sx={{ display: 'flex', alignItems: 'center', my: 3 }}>
+                    <Box sx={{ flex: 1, height: '1px', backgroundColor: 'rgba(155, 126, 222, 0.3)' }} />
+                    <Typography variant="body2" sx={{ px: 2, color: '#6B5B8A', fontWeight: 500 }}>
+                        or
+                    </Typography>
+                    <Box sx={{ flex: 1, height: '1px', backgroundColor: 'rgba(155, 126, 222, 0.3)' }} />
+                </Box>
 
                 <form onSubmit={handleSubmit}>
                     <Card sx={{ mb: 3, borderRadius: 3 }}>
@@ -1010,6 +1041,62 @@ const InputPage = () => {
                                             Enter any savings interest you're already earning from other accounts
                                         </Typography>
                                     </Box>
+
+                                    <Divider sx={{ my: 3, borderColor: 'rgba(155, 126, 222, 0.15)' }} />
+
+                                    <Box>
+                                        <Typography gutterBottom sx={{ fontWeight: 500, color: '#2D1B4E', mb: 0.5 }}>
+                                            Exclude Providers
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                            Toggle off any providers you don't want included in the optimisation
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                            {ALL_PROVIDERS.map(provider => {
+                                                const isExcluded = excludedProviders.includes(provider.id);
+                                                return (
+                                                    <Chip
+                                                        key={provider.id}
+                                                        label={provider.label}
+                                                        onClick={() => handleProviderToggle(provider.id)}
+                                                        icon={isExcluded ? <BlockIcon sx={{ fontSize: '1rem !important' }} /> : <CheckCircleOutlineIcon sx={{ fontSize: '1rem !important' }} />}
+                                                        variant={isExcluded ? 'outlined' : 'filled'}
+                                                        sx={{
+                                                            fontWeight: 500,
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.2s ease',
+                                                            ...(isExcluded ? {
+                                                                color: '#9e9e9e',
+                                                                borderColor: '#e0e0e0',
+                                                                backgroundColor: 'transparent',
+                                                                '& .MuiChip-icon': { color: '#9e9e9e' },
+                                                                textDecoration: 'line-through',
+                                                                '&:hover': {
+                                                                    backgroundColor: 'rgba(155, 126, 222, 0.06)',
+                                                                    borderColor: '#9B7EDE',
+                                                                },
+                                                            } : {
+                                                                backgroundColor: 'rgba(155, 126, 222, 0.12)',
+                                                                color: '#2D1B4E',
+                                                                border: '1px solid rgba(155, 126, 222, 0.3)',
+                                                                '& .MuiChip-icon': { color: '#9B7EDE' },
+                                                                '&:hover': {
+                                                                    backgroundColor: 'rgba(155, 126, 222, 0.2)',
+                                                                },
+                                                            }),
+                                                        }}
+                                                    />
+                                                );
+                                            })}
+                                        </Box>
+                                        {excludedProviders.length > 0 && (
+                                            <Typography variant="caption" sx={{ mt: 1.5, display: 'block', color: '#9e9e9e', fontStyle: 'italic' }}>
+                                                {excludedProviders.length === ALL_PROVIDERS.length
+                                                    ? 'All providers excluded — no results will be found.'
+                                                    : `Excluding: ${excludedProviders.join(', ')}`}
+                                            </Typography>
+                                        )}
+                                    </Box>
                                 </CardContent>
                             </Card>
                         </motion.div>
@@ -1028,7 +1115,7 @@ const InputPage = () => {
                             fullWidth
                             disabled={loading}
                             sx={{
-                                mt: 3,
+                                mt: 2,
                                 py: 2,
                                 fontSize: '1.1rem',
                                 fontWeight: 600,

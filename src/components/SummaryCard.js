@@ -1,12 +1,11 @@
 import React, { useState, useRef } from 'react';
-import { Card, CardContent, Typography, Box, Button, Collapse, CircularProgress, CardActions, Popover, IconButton } from '@mui/material';
+import { Card, CardContent, Typography, Box, Button, Collapse, CircularProgress, Popover, IconButton } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined';
 import TrendingUpOutlinedIcon from '@mui/icons-material/TrendingUpOutlined';
 import PieChartOutlineOutlinedIcon from '@mui/icons-material/PieChartOutlineOutlined';
 import AttachMoneyOutlinedIcon from '@mui/icons-material/AttachMoneyOutlined';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -245,7 +244,8 @@ const SummaryCard = ({ summary, inputs, investments }) => {
                     ))}
                 </Grid>
             </CardContent>
-            <CardActions sx={{ p: 0, borderTop: 1, borderColor: 'divider' }}>
+            {/* AI explanation button — temporarily hidden; logic preserved below */}
+            {/* <CardActions sx={{ p: 0, borderTop: 1, borderColor: 'divider' }}>
                 <Button
                     onClick={handleExplainClick}
                     fullWidth
@@ -264,7 +264,7 @@ const SummaryCard = ({ summary, inputs, investments }) => {
                 >
                     Explain this savings plan
                 </Button>
-            </CardActions>
+            </CardActions> */}
             <Collapse in={expanded} timeout="auto" unmountOnExit>
                 <Box sx={{ p: { xs: 2, sm: 3 }, borderTop: 1, borderColor: 'divider' }}>
                     {explanationError && (
